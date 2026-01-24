@@ -32,4 +32,7 @@ public class UserAccountController {
     public List<UserAccount> getAllUserAccounts() {
         return List.of();
 }
+
+    public void start() {
+    }
 }
