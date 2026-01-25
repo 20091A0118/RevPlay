@@ -2,11 +2,13 @@ package com.revplay.dao;
 
 import com.revplay.model.Song;
 import com.revplay.util.JDBCUtil;
+
 import java.sql.*;
 import java.util.*;
 
 public class FavoriteDaoImpl implements IFavoriteDao {
 
+    @Override
     public boolean addFavorite(int userId, int songId) {
 
         String check = "SELECT COUNT(*) FROM favorite_song WHERE user_id=? AND song_id=?";
@@ -19,7 +21,10 @@ public class FavoriteDaoImpl implements IFavoriteDao {
                 ps.setInt(2, songId);
                 ResultSet rs = ps.executeQuery();
                 rs.next();
-                if (rs.getInt(1) > 0) return false;
+                if (rs.getInt(1) > 0) {
+                    System.out.println("⚠️ Already favorite");
+                    return false;
+                }
             }
 
             try (PreparedStatement ps = con.prepareStatement(insert)) {
@@ -29,15 +34,20 @@ public class FavoriteDaoImpl implements IFavoriteDao {
             }
 
         } catch (Exception e) { e.printStackTrace(); }
+
         return false;
     }
 
+    @Override
     public List<Song> getFavoriteSongs(int userId) {
+
         List<Song> list = new ArrayList<>();
+
         String sql = """
-            SELECT s.song_id, s.title, s.genre_id
-            FROM song s JOIN favorite_song f ON s.song_id=f.song_id
-            WHERE f.user_id=?
+            SELECT s.*
+            FROM song s JOIN favorite_song f
+            ON s.song_id = f.song_id
+            WHERE f.user_id = ?
         """;
 
         try (Connection con = JDBCUtil.getConnection();
@@ -45,10 +55,18 @@ public class FavoriteDaoImpl implements IFavoriteDao {
 
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
-            while (rs.next())
-                list.add(new Song(rs.getInt(1), rs.getString(2), rs.getInt(3)));
+
+            while (rs.next()) {
+                Song s = new Song();
+                s.setSongId(rs.getInt("song_id"));
+                s.setTitle(rs.getString("title"));
+                s.setArtistId(rs.getInt("artist_id"));
+                s.setGenreId(rs.getInt("genre_id"));
+                list.add(s);
+            }
 
         } catch (Exception e) { e.printStackTrace(); }
+
         return list;
     }
 }

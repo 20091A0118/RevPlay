@@ -1,16 +1,16 @@
 package com.revplay.model;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public class FavoriteSong {
 
     private int userId;
     private int songId;
-    private Date favoritedAt;
+    private LocalDateTime favoritedAt;
 
     public FavoriteSong() {}
 
-    public FavoriteSong(int userId, int songId, Date favoritedAt) {
+    public FavoriteSong(int userId, int songId, LocalDateTime favoritedAt) {
         this.userId = userId;
         this.songId = songId;
         this.favoritedAt = favoritedAt;
@@ -22,15 +22,6 @@ public class FavoriteSong {
     public int getSongId() { return songId; }
     public void setSongId(int songId) { this.songId = songId; }
 
-    public Date getFavoritedAt() { return favoritedAt; }
-    public void setFavoritedAt(Date favoritedAt) { this.favoritedAt = favoritedAt; }
-
-    @Override
-    public String toString() {
-        return "FavoriteSong{" +
-                "userId=" + userId +
-                ", songId=" + songId +
-                ", favoritedAt=" + favoritedAt +
-                '}';
-    }
+    public LocalDateTime getFavoritedAt() { return favoritedAt; }
+    public void setFavoritedAt(LocalDateTime favoritedAt) { this.favoritedAt = favoritedAt; }
 }
