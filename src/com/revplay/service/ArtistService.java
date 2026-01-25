@@ -2,7 +2,7 @@ package com.revplay.service;
 
 import com.revplay.dao.*;
 import com.revplay.model.Album;
-import com.revplay.model.Artist;
+import com.revplay.model.ArtistAccount;
 import com.revplay.model.Song;
 
 import java.util.List;
@@ -14,20 +14,22 @@ public class ArtistService {
     private ISongDAO songDAO = new SongDAOImpl();
     private ISongStatsDAO songStatsDAO = new SongStatsDAOImpl();
 
-    public boolean registerArtist(Artist artist) {
+    public boolean registerArtist(ArtistAccount artist) {
         return artistDAO.registerArtist(artist);
     }
 
-    public Artist loginArtist(String email, String password) {
-        return artistDAO.loginArtist(email, password);
+    public ArtistAccount loginArtist(String email, String passwordHash) {
+        return artistDAO.loginArtist(email, passwordHash);
     }
 
-    public Artist viewProfile(int artistId) {
+    public ArtistAccount viewProfile(int artistId) {
         return artistDAO.getArtistById(artistId);
     }
 
-    public boolean updateProfile(int artistId, String bio, String genre, String instagram, String youtube) {
-        return artistDAO.updateArtistProfile(artistId, bio, genre, instagram, youtube);
+    public boolean updateProfile(int artistId, String bio, String genre,
+                                 String instagramLink, String youtubeLink,
+                                 String spotifyLink, String status) {
+        return artistDAO.updateArtistProfile(artistId, bio, genre, instagramLink, youtubeLink, spotifyLink, status);
     }
 
     public boolean createAlbum(Album album) {

@@ -1,6 +1,7 @@
 package com.revplay.model;
 
 public class SongStats {
+
     private int songId;
     private int playCount;
     private int favoriteCount;

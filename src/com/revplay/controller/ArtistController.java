@@ -1,7 +1,7 @@
 package com.revplay.controller;
 
 import com.revplay.model.Album;
-import com.revplay.model.Artist;
+import com.revplay.model.ArtistAccount;
 import com.revplay.model.Song;
 import com.revplay.service.ArtistService;
 
@@ -40,16 +40,17 @@ public class ArtistController {
     }
 
     private void register() {
-        Artist a = new Artist();
 
-        System.out.print("Enter Name: ");
-        a.setName(sc.nextLine());
+        ArtistAccount a = new ArtistAccount();
+
+        System.out.print("Enter Stage Name: ");
+        a.setStageName(sc.nextLine());
 
         System.out.print("Enter Email: ");
         a.setEmail(sc.nextLine());
 
         System.out.print("Enter Password: ");
-        a.setPassword(sc.nextLine());
+        a.setPasswordHash(sc.nextLine()); // storing plain password for now
 
         System.out.print("Enter Bio: ");
         a.setBio(sc.nextLine());
@@ -58,12 +59,19 @@ public class ArtistController {
         a.setGenre(sc.nextLine());
 
         System.out.print("Enter Instagram Link: ");
-        a.setInstagram(sc.nextLine());
+        a.setInstagramLink(sc.nextLine());
 
         System.out.print("Enter YouTube Link: ");
-        a.setYoutube(sc.nextLine());
+        a.setYoutubeLink(sc.nextLine());
+
+        System.out.print("Enter Spotify Link: ");
+        a.setSpotifyLink(sc.nextLine());
+
+        System.out.print("Enter Status (ACTIVE/INACTIVE): ");
+        a.setStatus(sc.nextLine());
 
         boolean ok = service.registerArtist(a);
+
         if (ok) System.out.println("Artist Registered Successfully ✅");
         else System.out.println("Artist Registration Failed ❌");
     }
@@ -76,18 +84,18 @@ public class ArtistController {
         System.out.print("Enter Password: ");
         String password = sc.nextLine();
 
-        Artist artist = service.loginArtist(email, password);
+        ArtistAccount artist = service.loginArtist(email, password);
 
         if (artist == null) {
             System.out.println("Login Failed ❌");
             return;
         }
 
-        System.out.println("Login Successful ✅ Welcome " + artist.getName());
+        System.out.println("Login Successful ✅ Welcome " + artist.getStageName());
         artistDashboard(artist);
     }
 
-    private void artistDashboard(Artist artist) {
+    private void artistDashboard(ArtistAccount artist) {
 
         while (true) {
             System.out.println("\n===========================");
@@ -153,23 +161,25 @@ public class ArtistController {
         }
     }
 
-    private void viewProfile(Artist artist) {
+    private void viewProfile(ArtistAccount artist) {
 
-        Artist a = service.viewProfile(artist.getArtistId());
+        ArtistAccount a = service.viewProfile(artist.getArtistId());
 
         if (a != null) {
             System.out.println("\n----- PROFILE -----");
             System.out.println("ID: " + a.getArtistId());
-            System.out.println("Name: " + a.getName());
+            System.out.println("Stage Name: " + a.getStageName());
             System.out.println("Email: " + a.getEmail());
             System.out.println("Bio: " + a.getBio());
             System.out.println("Genre: " + a.getGenre());
-            System.out.println("Instagram: " + a.getInstagram());
-            System.out.println("YouTube: " + a.getYoutube());
+            System.out.println("Instagram: " + a.getInstagramLink());
+            System.out.println("YouTube: " + a.getYoutubeLink());
+            System.out.println("Spotify: " + a.getSpotifyLink());
+            System.out.println("Status: " + a.getStatus());
         }
     }
 
-    private void updateProfile(Artist artist) {
+    private void updateProfile(ArtistAccount artist) {
 
         System.out.print("Enter new Bio: ");
         String bio = sc.nextLine();
@@ -183,13 +193,19 @@ public class ArtistController {
         System.out.print("Enter new YouTube Link: ");
         String youtube = sc.nextLine();
 
-        boolean ok = service.updateProfile(artist.getArtistId(), bio, genre, instagram, youtube);
+        System.out.print("Enter new Spotify Link: ");
+        String spotify = sc.nextLine();
+
+        System.out.print("Enter new Status (ACTIVE/INACTIVE): ");
+        String status = sc.nextLine();
+
+        boolean ok = service.updateProfile(artist.getArtistId(), bio, genre, instagram, youtube, spotify, status);
 
         if (ok) System.out.println("Profile Updated ✅");
         else System.out.println("Profile Update Failed ❌");
     }
 
-    private void createAlbum(Artist artist) {
+    private void createAlbum(ArtistAccount artist) {
 
         Album al = new Album();
         al.setArtistId(artist.getArtistId());
@@ -209,7 +225,7 @@ public class ArtistController {
         else System.out.println("Album Creation Failed ❌");
     }
 
-    private void viewAlbums(Artist artist) {
+    private void viewAlbums(ArtistAccount artist) {
 
         List<Album> albums = service.viewAlbums(artist.getArtistId());
 
@@ -225,7 +241,7 @@ public class ArtistController {
         }
     }
 
-    private void uploadSong(Artist artist) {
+    private void uploadSong(ArtistAccount artist) {
 
         Song s = new Song();
         s.setArtistId(artist.getArtistId());
@@ -256,7 +272,7 @@ public class ArtistController {
         else System.out.println("Song Upload Failed ❌");
     }
 
-    private void viewSongs(Artist artist) {
+    private void viewSongs(ArtistAccount artist) {
 
         List<Song> songs = service.viewSongs(artist.getArtistId());
 
@@ -272,7 +288,7 @@ public class ArtistController {
         }
     }
 
-    private void updateSong(Artist artist) {
+    private void updateSong(ArtistAccount artist) {
 
         Song s = new Song();
         s.setArtistId(artist.getArtistId());
@@ -300,7 +316,7 @@ public class ArtistController {
         else System.out.println("Song Update Failed ❌");
     }
 
-    private void deleteSong(Artist artist) {
+    private void deleteSong(ArtistAccount artist) {
 
         System.out.print("Enter Song ID to delete: ");
         int songId = sc.nextInt();
@@ -312,7 +328,7 @@ public class ArtistController {
         else System.out.println("Song Delete Failed ❌");
     }
 
-    private void updateAlbum(Artist artist) {
+    private void updateAlbum(ArtistAccount artist) {
 
         Album al = new Album();
         al.setArtistId(artist.getArtistId());
@@ -336,7 +352,7 @@ public class ArtistController {
         else System.out.println("Album Update Failed ❌");
     }
 
-    private void deleteAlbum(Artist artist) {
+    private void deleteAlbum(ArtistAccount artist) {
 
         System.out.print("Enter Album ID to delete: ");
         int albumId = sc.nextInt();

@@ -1,25 +1,16 @@
 package com.revplay.model;
 
 public class Song {
+
     private int songId;
     private int artistId;
-    private Integer albumId; // can be null
+    private Integer albumId; // nullable
     private String title;
     private String genre;
     private int durationSec;
-    private String releaseDate; // simple
+    private String releaseDate; // YYYY-MM-DD
 
     public Song() {}
-
-    public Song(int songId, int artistId, Integer albumId, String title, String genre, int durationSec, String releaseDate) {
-        this.songId = songId;
-        this.artistId = artistId;
-        this.albumId = albumId;
-        this.title = title;
-        this.genre = genre;
-        this.durationSec = durationSec;
-        this.releaseDate = releaseDate;
-    }
 
     public int getSongId() {
         return songId;
@@ -90,4 +81,3 @@ public class Song {
                 '}';
     }
 }
-

@@ -1,14 +1,16 @@
 package com.revplay.dao;
 
-import com.revplay.model.Artist;
+import com.revplay.model.ArtistAccount;
 
 public interface IArtistDAO {
 
-    boolean registerArtist(Artist artist);
+    boolean registerArtist(ArtistAccount artist);
 
-    Artist loginArtist(String email, String password);
+    ArtistAccount loginArtist(String email, String passwordHash);
 
-    Artist getArtistById(int artistId);
+    ArtistAccount getArtistById(int artistId);
 
-    boolean updateArtistProfile(int artistId, String bio, String genre, String instagram, String youtube);
+    boolean updateArtistProfile(int artistId, String bio, String genre,
+                                String instagramLink, String youtubeLink,
+                                String spotifyLink, String status);
 }
