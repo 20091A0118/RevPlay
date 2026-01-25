@@ -1,67 +1,33 @@
 package com.revplay.util;
 
 import java.sql.Connection;
-
 import java.sql.DriverManager;
-
 import java.util.Properties;
-
-import java.io.InputStream;
 
 public class JDBCUtil {
 
-    private static String url;
-
-    private static String username;
-
-    private static String password;
+    private static Connection connection;
 
     static {
-
-        try (InputStream is = JDBCUtil.class
-
-                .getClassLoader()
-
-                .getResourceAsStream("db.properties")) {
-
+        try {
             Properties props = new Properties();
+            props.load(JDBCUtil.class
+                    .getClassLoader()
+                    .getResourceAsStream("db.properties"));
 
-            props.load(is);
+            String url = props.getProperty("db.url");
+            String user = props.getProperty("db.username");
+            String pass = props.getProperty("db.password");
 
-            url = props.getProperty("db.url");
-
-            username = props.getProperty("db.username");
-
-            password = props.getProperty("db.password");
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+            connection = DriverManager.getConnection(url, user, pass);
 
         } catch (Exception e) {
-
             e.printStackTrace();
-
         }
-
     }
-
-    private JDBCUtil() {}
 
     public static Connection getConnection() {
-
-        Connection con = null;
-
-        try {
-            Class.forName("oracle.jdbc.driver.OracleDriver");
-            con = DriverManager.getConnection(url, username, password);
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-        }
-
-        return con;
-
+        return connection;
     }
-
 }
-
-
