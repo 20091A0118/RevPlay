@@ -1,16 +1,18 @@
 package com.revplay.service;
 
 import com.revplay.dao.*;
-import com.revplay.model.*;
+import com.revplay.model.Album;
+import com.revplay.model.Artist;
+import com.revplay.model.Song;
 
 import java.util.List;
 
 public class ArtistService {
 
-    private ArtistDAO artistDAO = new ArtistDAO();
-    private AlbumDAO albumDAO = new AlbumDAO();
-    private SongDAO songDAO = new SongDAO();
-    private SongStatsDAO songStatsDAO = new SongStatsDAO();
+    private IArtistDAO artistDAO = new ArtistDAOImpl();
+    private IAlbumDAO albumDAO = new AlbumDAOImpl();
+    private ISongDAO songDAO = new SongDAOImpl();
+    private ISongStatsDAO songStatsDAO = new SongStatsDAOImpl();
 
     public boolean registerArtist(Artist artist) {
         return artistDAO.registerArtist(artist);
@@ -21,23 +23,23 @@ public class ArtistService {
     }
 
     public Artist viewProfile(int artistId) {
-        return artistDAO.viewProfile(artistId);
+        return artistDAO.getArtistById(artistId);
     }
 
-    public boolean updateProfile(int artistId, String bio, String genre, String socials) {
-        return artistDAO.updateProfile(artistId, bio, genre, socials);
+    public boolean updateProfile(int artistId, String bio, String genre, String instagram, String youtube) {
+        return artistDAO.updateArtistProfile(artistId, bio, genre, instagram, youtube);
     }
 
     public boolean createAlbum(Album album) {
         return albumDAO.createAlbum(album);
     }
 
-    public List<Album> viewAlbumsByArtist(int artistId) {
-        return albumDAO.viewAlbumsByArtist(artistId);
+    public List<Album> viewAlbums(int artistId) {
+        return albumDAO.getAlbumsByArtist(artistId);
     }
 
-    public boolean updateAlbum(int albumId, int artistId, String title, String genre, String releaseDate) {
-        return albumDAO.updateAlbum(albumId, artistId, title, genre, releaseDate);
+    public boolean updateAlbum(Album album) {
+        return albumDAO.updateAlbum(album);
     }
 
     public boolean deleteAlbum(int albumId, int artistId) {
@@ -48,12 +50,12 @@ public class ArtistService {
         return songDAO.uploadSong(song);
     }
 
-    public List<Song> viewSongsByArtist(int artistId) {
-        return songDAO.viewSongsByArtist(artistId);
+    public List<Song> viewSongs(int artistId) {
+        return songDAO.getSongsByArtist(artistId);
     }
 
-    public boolean updateSong(int songId, int artistId, String title, String genre, int duration, String releaseDate) {
-        return songDAO.updateSong(songId, artistId, title, genre, duration, releaseDate);
+    public boolean updateSong(Song song) {
+        return songDAO.updateSong(song);
     }
 
     public boolean deleteSong(int songId, int artistId) {

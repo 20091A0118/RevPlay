@@ -50,7 +50,7 @@ public class JDBCUtil {
 
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
-            con = DriverManager.getConnection(url, username, password);
+            con = DriverManager.getConnection("jdbc:oracle:thin:@db.freesql.com:1521/23ai_34ui2", "CHINNUREDDI735_SCHEMA_9CYLZ", "3O8X$2BL8OHGK8J1JTKIK6GuF71DHO");
 
         } catch (Exception e) {
 

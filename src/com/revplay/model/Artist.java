@@ -1,25 +1,17 @@
 package com.revplay.model;
 
 public class Artist {
+
     private int artistId;
     private String name;
     private String email;
     private String password;
     private String bio;
     private String genre;
-    private String socials;
+    private String instagram;
+    private String youtube;
 
     public Artist() {}
-
-    public Artist(int artistId, String name, String email, String password, String bio, String genre, String socials) {
-        this.artistId = artistId;
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.bio = bio;
-        this.genre = genre;
-        this.socials = socials;
-    }
 
     public int getArtistId() {
         return artistId;
@@ -69,12 +61,20 @@ public class Artist {
         this.genre = genre;
     }
 
-    public String getSocials() {
-        return socials;
+    public String getInstagram() {
+        return instagram;
     }
 
-    public void setSocials(String socials) {
-        this.socials = socials;
+    public void setInstagram(String instagram) {
+        this.instagram = instagram;
+    }
+
+    public String getYoutube() {
+        return youtube;
+    }
+
+    public void setYoutube(String youtube) {
+        this.youtube = youtube;
     }
 
     @Override
@@ -85,8 +85,8 @@ public class Artist {
                 ", email='" + email + '\'' +
                 ", bio='" + bio + '\'' +
                 ", genre='" + genre + '\'' +
-                ", socials='" + socials + '\'' +
+                ", instagram='" + instagram + '\'' +
+                ", youtube='" + youtube + '\'' +
                 '}';
     }
 }
-
