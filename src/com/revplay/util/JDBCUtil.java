@@ -50,7 +50,7 @@ public class JDBCUtil {
 
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
-            con = DriverManager.getConnection(url, username, password);
+            con = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521/xepdb1", "scott","tiger");
 
         } catch (Exception e) {
 

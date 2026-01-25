@@ -1,4 +1,5 @@
 package com.revplay.model;
+
 import java.time.LocalDateTime;
 
 public class PlayListSong {
@@ -7,15 +8,20 @@ public class PlayListSong {
     private int songId;
     private LocalDateTime addedAt;
 
-    public PlayListSong(int playlistId, int songId) {
+    public PlayListSong() {}
+
+    public PlayListSong(int playlistId, int songId, LocalDateTime addedAt) {
         this.playlistId = playlistId;
         this.songId = songId;
-        this.addedAt = LocalDateTime.now();
+        this.addedAt = addedAt;
     }
 
-    // Getters
     public int getPlaylistId() { return playlistId; }
-    public int getSongId() { return songId; }
-    public LocalDateTime getAddedAt() { return addedAt; }
-}
+    public void setPlaylistId(int playlistId) { this.playlistId = playlistId; }
 
+    public int getSongId() { return songId; }
+    public void setSongId(int songId) { this.songId = songId; }
+
+    public LocalDateTime getAddedAt() { return addedAt; }
+    public void setAddedAt(LocalDateTime addedAt) { this.addedAt = addedAt; }
+}

@@ -1,6 +1,5 @@
 package com.revplay.dao;
 
-
 import com.revplay.model.PlayList;
 import com.revplay.model.PlayListSong;
 
@@ -13,8 +12,11 @@ public interface IPlayListDAO {
     boolean updatePlayList(PlayList playlist);
     boolean deletePlayList(int playlistId);
     List<PlayList> getPublicPlayLists();
+    PlayList getPlayListById(int playlistId); // Optional: fetch single playlist
 
     // Playlist-Song operations
     boolean addSongToPlaylist(PlayListSong psong);
     boolean removeSongFromPlaylist(int playlistId, int songId);
+    List<PlayListSong> getSongsInPlaylist(int playlistId); // Optional: fetch songs in a playlist
+     int getPlaylistIdByName(String name) ;
 }

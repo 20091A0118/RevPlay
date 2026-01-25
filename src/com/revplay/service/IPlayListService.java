@@ -15,6 +15,8 @@ public interface IPlayListService {
 
     List<PlayList> getPublicPlaylists();
 
+    int getPlayListIdByName(String name);
+
     // Playlist-Song operations
     boolean addSong(int playlistId, int songId);
 
