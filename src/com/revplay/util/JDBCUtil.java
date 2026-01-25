@@ -22,7 +22,7 @@ public class JDBCUtil {
 
                 .getClassLoader()
 
-                .getResourceAsStream("db.properties")) {
+                .getResourceAsStream("com/revplay/util/db.properties")) {
 
             Properties props = new Properties();
 
