@@ -4,12 +4,9 @@ import com.revplay.model.PodcastEpisode;
 import java.util.List;
 
 public interface IPodcastEpisodeDao {
-
-    void createEpisode(PodcastEpisode episode);
-
-    void updateEpisode(PodcastEpisode episode);
-
-    void deleteEpisode(int episodeId);
-
+    void addEpisode(PodcastEpisode episode);
     List<PodcastEpisode> getEpisodesByPodcast(int podcastId);
+    void playEpisode(int episodeId);
+
+    void incrementPlayCount(int episodeId);
 }
