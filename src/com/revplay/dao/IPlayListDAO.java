@@ -7,16 +7,29 @@ import java.util.List;
 
 public interface IPlayListDAO {
 
-    // Playlist operations
-    boolean createPlayList(PlayList playlist);
-    boolean updatePlayList(PlayList playlist);
-    boolean deletePlayList(int playlistId);
-    List<PlayList> getPublicPlayLists();
-    PlayList getPlayListById(int playlistId); // Optional: fetch single playlist
+    int createPlaylist(PlayList playlist);
 
-    // Playlist-Song operations
-    boolean addSongToPlaylist(PlayListSong psong);
-    boolean removeSongFromPlaylist(int playlistId, int songId);
-    List<PlayListSong> getSongsInPlaylist(int playlistId); // Optional: fetch songs in a playlist
-     int getPlaylistIdByName(String name) ;
+    PlayList getPlaylistById(int playlistId);
+
+    boolean addSongToPlaylistSong(int playlistId, int songId);
+
+
+ boolean removeSongFromPlaylist(int playlistId, int songId);
+
+    boolean updatePlaylist(PlayList playlist);
+
+    boolean deletePlaylist(int playlistId);
+
+//    List<PlayList> getAllPlayLists();
+
+    PlayListSong getSongFromPlaylistSong(int playlistId, int songId);
+
+    boolean updateSongInPlaylist(int playlistId, int oldSongId, int newSongId);
+
+    List<PlayListSong> getAllSongsByPlaylistId(int playlistId);
+
+    List<PlayList> getAllPlaylists();
+
+    List<PlayList> getAllPublicPlaylists();
+
 }

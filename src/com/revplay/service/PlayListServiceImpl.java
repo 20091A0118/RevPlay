@@ -4,9 +4,9 @@ import com.revplay.dao.IPlayListDAO;
 import com.revplay.dao.PlayListDAOImpl;
 import com.revplay.model.PlayList;
 import com.revplay.model.PlayListSong;
+import java.util.List;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class PlayListServiceImpl implements IPlayListService {
 
@@ -14,34 +14,28 @@ public class PlayListServiceImpl implements IPlayListService {
 
     @Override
     public boolean createPlaylist(PlayList playlist) {
-        // Set created and updated timestamps if not set
-        if (playlist.getCreatedAt() == null) playlist.setCreatedAt(LocalDateTime.now());
-        if (playlist.getUpdatedAt() == null) playlist.setUpdatedAt(LocalDateTime.now());
-        return dao.createPlayList(playlist);
+        return dao.createPlaylist(playlist) > 0;
     }
+
 
     @Override
     public boolean updatePlaylist(PlayList playlist) {
-        playlist.setUpdatedAt(LocalDateTime.now()); // always update timestamp
-        // Ensure privacyStatus is not null
-        if (playlist.getPrivacyStatus() == null || playlist.getPrivacyStatus().isEmpty()) {
-            // Set a default value if null
-            playlist.setPrivacyStatus("public");
-        }
-        return dao.updatePlayList(playlist);
+        return dao.updatePlaylist(playlist);
     }
 
     @Override
     public boolean deletePlaylist(int playlistId) {
-        return dao.deletePlayList(playlistId);
+        return dao.deletePlaylist(playlistId);
+    }
+
+    @Override
+    public PlayList getPlaylistById(int playlistId) {
+        return dao.getPlaylistById(playlistId);
     }
 
     @Override
     public boolean addSong(int playlistId, int songId) {
-        PlayListSong psong =
-                new PlayListSong(playlistId, songId, LocalDateTime.now());
-
-        return dao.addSongToPlaylist(psong);
+        return dao.addSongToPlaylistSong(playlistId, songId);
     }
 
     @Override
@@ -50,12 +44,28 @@ public class PlayListServiceImpl implements IPlayListService {
     }
 
     @Override
-    public List<PlayList> getPublicPlaylists() {
-        return dao.getPublicPlayLists();
+    public PlayListSong getSongByIds(int playlistId, int songId) {
+        return dao.getSongFromPlaylistSong(playlistId, songId);
     }
 
     @Override
-    public int getPlayListIdByName(String name){
-        return dao.getPlaylistIdByName(name);
+    public boolean updateSong(int playlistId, int oldSongId, int newSongId) {
+        return dao.updateSongInPlaylist(playlistId, oldSongId, newSongId);
     }
+
+    @Override
+    public List<PlayListSong> getSongsByPlaylistId(int playlistId) {
+        return dao.getAllSongsByPlaylistId(playlistId);
+    }
+    @Override
+    public List<PlayList> getAllPlaylists() {
+        return dao.getAllPlaylists();
+    }
+
+    @Override
+    public List<PlayList> getAllPublicPlaylists() {
+        return dao.getAllPublicPlaylists();
+    }
+
+
 }
