@@ -8,4 +8,6 @@ public interface IPodcastDao {
     List<Podcast> getAllPodcasts();
     void updatePodcast(Podcast podcast);
     void deletePodcast(int podcastId);
+
+    List<Podcast> searchPodcastByTitle(String title);
 }

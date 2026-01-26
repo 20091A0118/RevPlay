@@ -10,7 +10,6 @@ import java.util.List;
 
 public class PodcastDaoImpl implements IPodcastDao {
 
-    @Override
     public void createPodcast(Podcast p) {
         String sql = "INSERT INTO podcast(title, host_name, category, description, created_at) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = JDBCUtil.getConnection().prepareStatement(sql)) {
@@ -20,13 +19,34 @@ public class PodcastDaoImpl implements IPodcastDao {
             ps.setString(4, p.getDescription());
             ps.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
             ps.executeUpdate();
-            System.out.println("✅ Podcast added successfully!");
+            System.out.println("✅ Podcast added");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @Override
+    public List<Podcast> getAllPodcasts() {
+        List<Podcast> list = new ArrayList<>();
+        String sql = "SELECT * FROM podcast ORDER BY podcast_id";
+        try (Statement st = JDBCUtil.getConnection().createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+
+            while (rs.next()) {
+                list.add(new Podcast(
+                        rs.getInt("podcast_id"),
+                        rs.getString("title"),
+                        rs.getString("host_name"),
+                        rs.getString("category"),
+                        rs.getString("description"),
+                        rs.getTimestamp("created_at").toLocalDateTime()
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public void updatePodcast(Podcast p) {
         String sql = "UPDATE podcast SET title=?, host_name=?, category=?, description=? WHERE podcast_id=?";
         try (PreparedStatement ps = JDBCUtil.getConnection().prepareStatement(sql)) {
@@ -35,58 +55,41 @@ public class PodcastDaoImpl implements IPodcastDao {
             ps.setString(3, p.getCategory());
             ps.setString(4, p.getDescription());
             ps.setInt(5, p.getPodcastId());
-            int rows = ps.executeUpdate();
-
-            if (rows > 0) {
-                System.out.println("✅ Podcast updated successfully!");
-                // Optional: Update podcast title in episodes table (if you store it redundantly)
-                String epSql = "UPDATE podcast_episode SET title = ? WHERE podcast_id = ?";
-                try (PreparedStatement psEp = JDBCUtil.getConnection().prepareStatement(epSql)) {
-                    psEp.setString(1, p.getTitle());
-                    psEp.setInt(2, p.getPodcastId());
-                    psEp.executeUpdate();
-                }
-            } else {
-                System.out.println("❌ Podcast ID not found!");
-            }
-
+            ps.executeUpdate();
+            System.out.println("✅ Podcast updated");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @Override
-    public void deletePodcast(int podcastId) {
+    public void deletePodcast(int id) {
         String sql = "DELETE FROM podcast WHERE podcast_id=?";
         try (PreparedStatement ps = JDBCUtil.getConnection().prepareStatement(sql)) {
-            ps.setInt(1, podcastId);
-            int rows = ps.executeUpdate();
-            if (rows > 0) {
-                System.out.println("✅ Podcast deleted successfully!");
-            } else {
-                System.out.println("❌ Podcast ID not found!");
-            }
+            ps.setInt(1, id);
+            ps.executeUpdate();
+            System.out.println("✅ Podcast deleted");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @Override
-    public List<Podcast> getAllPodcasts() {
+    public List<Podcast> searchPodcastByTitle(String title) {
         List<Podcast> list = new ArrayList<>();
-        String sql = "SELECT * FROM podcast ORDER BY podcast_id";
-        try (Statement st = JDBCUtil.getConnection().createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
+        String sql = "SELECT * FROM podcast WHERE LOWER(title) LIKE LOWER(?)";
+
+        try (PreparedStatement ps = JDBCUtil.getConnection().prepareStatement(sql)) {
+            ps.setString(1, "%" + title + "%");
+            ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
-                Podcast p = new Podcast(
+                list.add(new Podcast(
                         rs.getInt("podcast_id"),
                         rs.getString("title"),
                         rs.getString("host_name"),
                         rs.getString("category"),
                         rs.getString("description"),
                         rs.getTimestamp("created_at").toLocalDateTime()
-                );
-                list.add(p);
+                ));
             }
         } catch (Exception e) {
             e.printStackTrace();

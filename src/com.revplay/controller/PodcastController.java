@@ -1,9 +1,7 @@
 package com.revplay.controller;
 
-import com.revplay.model.Podcast;
-import com.revplay.model.PodcastEpisode;
-import com.revplay.service.PodcastEpisodeServiceImpl;
-import com.revplay.service.PodcastServiceImpl;
+import com.revplay.model.*;
+import com.revplay.service.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -26,8 +24,10 @@ public class PodcastController {
             System.out.println("5. Add Episode");
             System.out.println("6. View Episodes");
             System.out.println("7. Play Episode");
+            System.out.println("8. Search Podcast");
+            System.out.println("9. Search Episodes by Podcast Name");
             System.out.println("0. Exit");
-            System.out.print("Choose your option: ");
+            System.out.print("Choose option: ");
 
             choice = sc.nextInt();
             sc.nextLine();
@@ -40,8 +40,8 @@ public class PodcastController {
                 case 5 -> addEpisode();
                 case 6 -> viewEpisodes();
                 case 7 -> playEpisode();
-                case 0 -> System.out.println("Exiting...");
-                default -> System.out.println("❌ Invalid choice");
+                case 8 -> searchPodcast();
+                case 9 -> searchEpisodes();
             }
         } while (choice != 0);
     }
@@ -49,7 +49,7 @@ public class PodcastController {
     private void createPodcast() {
         System.out.print("Title: ");
         String title = sc.nextLine();
-        System.out.print("Host Name: ");
+        System.out.print("Host: ");
         String host = sc.nextLine();
         System.out.print("Category: ");
         String cat = sc.nextLine();
@@ -61,15 +61,13 @@ public class PodcastController {
     }
 
     private void viewPodcasts() {
-        System.out.println("\n🎵 List of Podcasts:");
         podcastService.getAllPodcasts()
                 .forEach(p -> System.out.println(p.getPodcastId() + " | " + p.getTitle()));
     }
 
     private void updatePodcast() {
         System.out.print("Podcast ID: ");
-        int id = sc.nextInt();
-        sc.nextLine();
+        int id = sc.nextInt(); sc.nextLine();
         System.out.print("New Title: ");
         String title = sc.nextLine();
         System.out.print("New Host: ");
@@ -79,8 +77,7 @@ public class PodcastController {
         System.out.print("New Description: ");
         String desc = sc.nextLine();
 
-        podcastService.updatePodcast(
-                new Podcast(id, title, host, cat, desc, null));
+        podcastService.updatePodcast(new Podcast(id, title, host, cat, desc, null));
     }
 
     private void deletePodcast() {
@@ -90,14 +87,12 @@ public class PodcastController {
 
     private void addEpisode() {
         System.out.print("Podcast ID: ");
-        int pid = sc.nextInt();
-        sc.nextLine();
+        int pid = sc.nextInt(); sc.nextLine();
         System.out.print("Episode Title: ");
         String title = sc.nextLine();
-        System.out.print("Duration (seconds): ");
-        int dur = sc.nextInt();
-        sc.nextLine();
-        System.out.print("Episode URL: ");
+        System.out.print("Duration: ");
+        int dur = sc.nextInt(); sc.nextLine();
+        System.out.print("URL: ");
         String url = sc.nextLine();
 
         episodeService.addEpisode(
@@ -108,12 +103,23 @@ public class PodcastController {
         System.out.print("Podcast ID: ");
         int pid = sc.nextInt();
         episodeService.getEpisodesByPodcast(pid)
-                .forEach(e -> System.out.println(e.getEpisodeId() + " | " + e.getTitle() + " | Plays: " + e.getPlayCount()));
+                .forEach(e -> System.out.println(e.getEpisodeId() + " | " + e.getTitle()));
     }
 
     private void playEpisode() {
         System.out.print("Episode ID: ");
-        int eid = sc.nextInt();
-        episodeService.playEpisode(eid);
+        episodeService.playEpisode(sc.nextInt());
+    }
+
+    private void searchPodcast() {
+        System.out.print("Enter podcast name: ");
+        podcastService.searchPodcastByTitle(sc.nextLine())
+                .forEach(p -> System.out.println(p.getPodcastId() + " | " + p.getTitle()));
+    }
+
+    private void searchEpisodes() {
+        System.out.print("Enter podcast name: ");
+        episodeService.searchEpisodesByPodcastTitle(sc.nextLine())
+                .forEach(e -> System.out.println(e.getEpisodeId() + " | " + e.getTitle()));
     }
 }
