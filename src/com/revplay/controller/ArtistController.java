@@ -50,7 +50,7 @@ public class ArtistController {
         a.setEmail(sc.nextLine());
 
         System.out.print("Enter Password: ");
-        a.setPasswordHash(sc.nextLine()); // storing plain password for now
+        a.setPasswordHash(sc.nextLine());
 
         System.out.print("Enter Bio: ");
         a.setBio(sc.nextLine());
@@ -67,8 +67,7 @@ public class ArtistController {
         System.out.print("Enter Spotify Link: ");
         a.setSpotifyLink(sc.nextLine());
 
-        System.out.print("Enter Status (ACTIVE/INACTIVE): ");
-        a.setStatus(sc.nextLine());
+        a.setStatus("ACTIVE");
 
         boolean ok = service.registerArtist(a);
 
@@ -103,16 +102,18 @@ public class ArtistController {
             System.out.println("===========================");
             System.out.println("1. View Profile");
             System.out.println("2. Update Profile");
-            System.out.println("3. Create Album");
+            System.out.println("3. Create Album (+ Add Songs)");
             System.out.println("4. View My Albums");
             System.out.println("5. Upload Song");
             System.out.println("6. View My Songs");
-            System.out.println("7. Update Song");
-            System.out.println("8. Delete Song");
-            System.out.println("9. Update Album");
-            System.out.println("10. Delete Album");
-            System.out.println("11. View Stats");
-            System.out.println("12. Logout");
+            System.out.println("7. View Songs By Album");
+            System.out.println("8. Search Song");
+            System.out.println("9. Update Song");
+            System.out.println("10. Delete Song");
+            System.out.println("11. Update Album");
+            System.out.println("12. Delete Album");
+            System.out.println("13. View Stats");
+            System.out.println("14. Logout");
             System.out.print("Enter choice: ");
 
             int ch = sc.nextInt();
@@ -126,33 +127,39 @@ public class ArtistController {
                     updateProfile(artist);
                     break;
                 case 3:
-                    createAlbum(artist);
+                    createAlbumAndAddSongs(artist);
                     break;
                 case 4:
                     viewAlbums(artist);
                     break;
                 case 5:
-                    uploadSong(artist);
+                    uploadSong(artist, null);
                     break;
                 case 6:
                     viewSongs(artist);
                     break;
                 case 7:
-                    updateSong(artist);
+                    viewSongsByAlbum(artist);
                     break;
                 case 8:
-                    deleteSong(artist);
+                    searchSong();
                     break;
                 case 9:
-                    updateAlbum(artist);
+                    updateSong(artist);
                     break;
                 case 10:
-                    deleteAlbum(artist);
+                    deleteSong(artist);
                     break;
                 case 11:
-                    service.viewStats(artist.getArtistId());
+                    updateAlbum(artist);
                     break;
                 case 12:
+                    deleteAlbum(artist);
+                    break;
+                case 13:
+                    service.viewStats(artist.getArtistId());
+                    break;
+                case 14:
                     System.out.println("Logout successful ✅");
                     return;
                 default:
@@ -196,16 +203,13 @@ public class ArtistController {
         System.out.print("Enter new Spotify Link: ");
         String spotify = sc.nextLine();
 
-        System.out.print("Enter new Status (ACTIVE/INACTIVE): ");
-        String status = sc.nextLine();
-
-        boolean ok = service.updateProfile(artist.getArtistId(), bio, genre, instagram, youtube, spotify, status);
+        boolean ok = service.updateProfile(artist.getArtistId(), bio, genre, instagram, youtube, spotify, "ACTIVE");
 
         if (ok) System.out.println("Profile Updated ✅");
         else System.out.println("Profile Update Failed ❌");
     }
 
-    private void createAlbum(ArtistAccount artist) {
+    private void createAlbumAndAddSongs(ArtistAccount artist) {
 
         Album al = new Album();
         al.setArtistId(artist.getArtistId());
@@ -219,10 +223,27 @@ public class ArtistController {
         System.out.print("Enter Release Date (YYYY-MM-DD): ");
         al.setReleaseDate(sc.nextLine());
 
-        boolean ok = service.createAlbum(al);
+        int albumId = service.createAlbum(al);
 
-        if (ok) System.out.println("Album Created ✅");
-        else System.out.println("Album Creation Failed ❌");
+        if (albumId == 0) {
+            System.out.println("Album Creation Failed ❌");
+            return;
+        }
+
+        System.out.println("Album Created ✅ Album ID = " + albumId);
+
+        System.out.print("Do you want to add songs now? (Y/N): ");
+        String ans = sc.nextLine();
+
+        if (ans.equalsIgnoreCase("Y")) {
+            while (true) {
+                uploadSong(artist, albumId);
+
+                System.out.print("Add another song? (Y/N): ");
+                String more = sc.nextLine();
+                if (!more.equalsIgnoreCase("Y")) break;
+            }
+        }
     }
 
     private void viewAlbums(ArtistAccount artist) {
@@ -232,7 +253,7 @@ public class ArtistController {
         System.out.println("\n----- MY ALBUMS -----");
 
         if (albums.isEmpty()) {
-            System.out.println("No albums found!");
+            System.out.println("No albums added yet.");
             return;
         }
 
@@ -241,16 +262,23 @@ public class ArtistController {
         }
     }
 
-    private void uploadSong(ArtistAccount artist) {
+    private void uploadSong(ArtistAccount artist, Integer fixedAlbumId) {
 
         Song s = new Song();
         s.setArtistId(artist.getArtistId());
+
+        if (fixedAlbumId != null) {
+            s.setAlbumId(fixedAlbumId);
+        }
 
         System.out.print("Enter Song Title: ");
         s.setTitle(sc.nextLine());
 
         System.out.print("Enter Song Genre: ");
         s.setGenre(sc.nextLine());
+
+        System.out.print("Enter Singer Name: ");
+        s.setSinger(sc.nextLine());
 
         System.out.print("Enter Duration in Seconds: ");
         s.setDurationSec(sc.nextInt());
@@ -259,12 +287,14 @@ public class ArtistController {
         System.out.print("Enter Release Date (YYYY-MM-DD): ");
         s.setReleaseDate(sc.nextLine());
 
-        System.out.print("Enter Album ID (0 if no album): ");
-        int albumId = sc.nextInt();
-        sc.nextLine();
+        if (fixedAlbumId == null) {
+            System.out.print("Enter Album ID (0 if no album): ");
+            int albumId = sc.nextInt();
+            sc.nextLine();
 
-        if (albumId == 0) s.setAlbumId(null);
-        else s.setAlbumId(albumId);
+            if (albumId == 0) s.setAlbumId(null);
+            else s.setAlbumId(albumId);
+        }
 
         boolean ok = service.uploadSong(s);
 
@@ -279,7 +309,60 @@ public class ArtistController {
         System.out.println("\n----- MY SONGS -----");
 
         if (songs.isEmpty()) {
-            System.out.println("No songs found!");
+            System.out.println("No songs uploaded yet.");
+            return;
+        }
+
+        for (Song s : songs) {
+            System.out.println(s);
+        }
+    }
+
+    private void viewSongsByAlbum(ArtistAccount artist) {
+
+        System.out.print("Enter Album ID: ");
+        int albumId = sc.nextInt();
+        sc.nextLine();
+
+        // Ensure album belongs to this artist
+        boolean owned = false;
+        List<Album> myAlbums = service.viewAlbums(artist.getArtistId());
+        for (Album a : myAlbums) {
+            if (a.getAlbumId() == albumId) {
+                owned = true;
+                break;
+            }
+        }
+
+        if (!owned) {
+            System.out.println("This album does not belong to you OR it does not exist ❌");
+            return;
+        }
+
+        List<Song> songs = service.viewSongsByAlbum(albumId);
+
+        System.out.println("\n----- SONGS IN THIS ALBUM -----");
+
+        if (songs.isEmpty()) {
+            System.out.println("No songs added in this album yet.");
+            return;
+        }
+
+        for (Song s : songs) {
+            System.out.println(s);
+        }
+    }
+
+    private void searchSong() {
+
+        System.out.print("Enter keyword to search song: ");
+        String key = sc.nextLine();
+
+        List<Song> songs = service.searchSongs(key);
+
+        System.out.println("\n----- SEARCH RESULTS -----");
+        if (songs.isEmpty()) {
+            System.out.println("No songs matched!");
             return;
         }
 
@@ -302,6 +385,9 @@ public class ArtistController {
 
         System.out.print("Enter New Genre: ");
         s.setGenre(sc.nextLine());
+
+        System.out.print("Enter New Singer Name: ");
+        s.setSinger(sc.nextLine());
 
         System.out.print("Enter New Duration (seconds): ");
         s.setDurationSec(sc.nextInt());

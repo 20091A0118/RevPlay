@@ -6,41 +6,54 @@ import com.revplay.util.JDBCUtil;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AlbumDAOImpl implements IAlbumDAO {
 
     @Override
-    public boolean createAlbum(Album album) {
+    public int createAlbum(Album album) {
 
-        String sql = "INSERT INTO albums (artist_id, title, genre, release_date) VALUES (?, ?, ?, TO_DATE(?, 'YYYY-MM-DD'))";
+        String sql = "INSERT INTO albums (artist_id, title, genre, release_date) " +
+                "VALUES (?, ?, ?, TO_DATE(?, 'YYYY-MM-DD'))";
 
         try (Connection con = JDBCUtil.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+             PreparedStatement ps = con.prepareStatement(sql, new String[]{"album_id"})) {
+
+            if (con == null) return 0;
 
             ps.setInt(1, album.getArtistId());
             ps.setString(2, album.getTitle());
             ps.setString(3, album.getGenre());
             ps.setString(4, album.getReleaseDate());
 
-            return ps.executeUpdate() > 0;
+            int rows = ps.executeUpdate();
+            if (rows == 0) return 0;
+
+            ResultSet keys = ps.getGeneratedKeys();
+            if (keys.next()) {
+                return keys.getInt(1); // ✅ album_id
+            }
 
         } catch (Exception e) {
             System.out.println("Create Album Error: " + e.getMessage());
-            return false;
         }
+
+        return 0;
     }
 
     @Override
     public List<Album> getAlbumsByArtist(int artistId) {
 
-        List<Album> albums = new ArrayList<>();
-        String sql = "SELECT * FROM albums WHERE artist_id=? ORDER BY album_id";
+        List<Album> list = new ArrayList<>();
+
+        String sql = "SELECT album_id, artist_id, title, genre, TO_CHAR(release_date, 'YYYY-MM-DD') AS release_date " +
+                "FROM albums WHERE artist_id=? ORDER BY album_id";
 
         try (Connection con = JDBCUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (con == null) return list;
 
             ps.setInt(1, artistId);
 
@@ -52,18 +65,15 @@ public class AlbumDAOImpl implements IAlbumDAO {
                 a.setArtistId(rs.getInt("artist_id"));
                 a.setTitle(rs.getString("title"));
                 a.setGenre(rs.getString("genre"));
-
-                Date d = rs.getDate("release_date");
-                a.setReleaseDate(d == null ? null : d.toString());
-
-                albums.add(a);
+                a.setReleaseDate(rs.getString("release_date"));
+                list.add(a);
             }
 
         } catch (Exception e) {
             System.out.println("View Albums Error: " + e.getMessage());
         }
 
-        return albums;
+        return list;
     }
 
     @Override
@@ -74,6 +84,8 @@ public class AlbumDAOImpl implements IAlbumDAO {
 
         try (Connection con = JDBCUtil.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (con == null) return false;
 
             ps.setString(1, album.getTitle());
             ps.setString(2, album.getGenre());
@@ -92,29 +104,29 @@ public class AlbumDAOImpl implements IAlbumDAO {
     @Override
     public boolean deleteAlbum(int albumId, int artistId) {
 
-        String checkSql = "SELECT COUNT(*) FROM songs WHERE album_id=?";
-        String deleteSql = "DELETE FROM albums WHERE album_id=? AND artist_id=?";
+        // delete song_stats -> songs -> album
+        String deleteStats = "DELETE FROM song_stats WHERE song_id IN (SELECT song_id FROM songs WHERE album_id=?)";
+        String deleteSongs = "DELETE FROM songs WHERE album_id=?";
+        String deleteAlbum = "DELETE FROM albums WHERE album_id=? AND artist_id=?";
 
         try (Connection con = JDBCUtil.getConnection()) {
 
-            // 1) Check songs count
-            try (PreparedStatement cps = con.prepareStatement(checkSql)) {
-                cps.setInt(1, albumId);
-                ResultSet rs = cps.executeQuery();
-                if (rs.next()) {
-                    int count = rs.getInt(1);
-                    if (count > 0) {
-                        System.out.println("Cannot delete album. Songs exist in that album.");
-                        return false;
-                    }
-                }
+            if (con == null) return false;
+
+            try (PreparedStatement ps1 = con.prepareStatement(deleteStats)) {
+                ps1.setInt(1, albumId);
+                ps1.executeUpdate();
             }
 
-            // 2) Delete album
-            try (PreparedStatement dps = con.prepareStatement(deleteSql)) {
-                dps.setInt(1, albumId);
-                dps.setInt(2, artistId);
-                return dps.executeUpdate() > 0;
+            try (PreparedStatement ps2 = con.prepareStatement(deleteSongs)) {
+                ps2.setInt(1, albumId);
+                ps2.executeUpdate();
+            }
+
+            try (PreparedStatement ps3 = con.prepareStatement(deleteAlbum)) {
+                ps3.setInt(1, albumId);
+                ps3.setInt(2, artistId);
+                return ps3.executeUpdate() > 0;
             }
 
         } catch (Exception e) {

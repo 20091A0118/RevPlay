@@ -9,6 +9,7 @@ public class Song {
     private String genre;
     private int durationSec;
     private String releaseDate; // YYYY-MM-DD
+    private String singer; // ✅ NEW
 
     public Song() {}
 
@@ -68,6 +69,14 @@ public class Song {
         this.releaseDate = releaseDate;
     }
 
+    public String getSinger() {
+        return singer;
+    }
+
+    public void setSinger(String singer) {
+        this.singer = singer;
+    }
+
     @Override
     public String toString() {
         return "Song{" +
@@ -76,6 +85,7 @@ public class Song {
                 ", albumId=" + albumId +
                 ", title='" + title + '\'' +
                 ", genre='" + genre + '\'' +
+                ", singer='" + singer + '\'' +
                 ", durationSec=" + durationSec +
                 ", releaseDate='" + releaseDate + '\'' +
                 '}';
