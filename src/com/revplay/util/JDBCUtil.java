@@ -1,10 +1,10 @@
-package com.revplay.auth.util;
+package com.revplay.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class DBConnection {
+public class JDBCUtil {
     private static final String URL = "jdbc:oracle:thin:@//localhost:1521/FREEPDB1";
     private static final String USER = "revplay";
     private static final String PASS = "revplay123";

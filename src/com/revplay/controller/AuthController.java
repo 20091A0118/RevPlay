@@ -1,20 +1,20 @@
-package com.revplay.auth.controller;
+package com.revplay.controller;
 
-import com.revplay.auth.model.User;
-import com.revplay.auth.service.UserService;
-import com.revplay.auth.service.UserServiceImpl;
+import com.revplay.model.UserAccount;
+import com.revplay.service.UserService;
+import com.revplay.service.UserServiceImpl;
 
 import java.util.Scanner;
 
 public class AuthController {
 
-    private static UserService userService = new UserServiceImpl();
+    private static final UserService userService = new UserServiceImpl();
 
     public static void startAuth() {
         Scanner sc = new Scanner(System.in);
-        boolean running = true;
+        boolean run = true;
 
-        while (running) {
+        while (run) {
             System.out.println("\n=== REVPLAY AUTH MENU ===");
             System.out.println("1. Register");
             System.out.println("2. Login");
@@ -24,7 +24,7 @@ public class AuthController {
             System.out.print("Choose option: ");
 
             int choice = sc.nextInt();
-            sc.nextLine();
+            sc.nextLine(); // consume newline
 
             switch (choice) {
                 case 1 -> register(sc);
@@ -32,10 +32,10 @@ public class AuthController {
                 case 3 -> changePassword(sc);
                 case 4 -> forgotPassword(sc);
                 case 5 -> {
-                    running = false;
+                    run = false;
                     System.out.println("Exiting Auth Module...");
                 }
-                default -> System.out.println("Invalid choice!");
+                default -> System.out.println("Invalid choice");
             }
         }
     }
@@ -56,10 +56,18 @@ public class AuthController {
         System.out.print("Security Answer: ");
         String answer = sc.nextLine();
 
-        User user = new User(0, name, email, password, question, answer);
+        UserAccount user = new UserAccount(
+                0,
+                name,
+                email,
+                password,
+                question,
+                answer,
+                "ACTIVE"
+        );
 
         boolean success = userService.registerUser(user);
-        System.out.println(success ? "Registration Successful!" : "Email already exists!");
+        System.out.println(success ? "Registered Successfully" : "User already exists");
     }
 
     private static void login(Scanner sc) {
@@ -69,8 +77,11 @@ public class AuthController {
         System.out.print("Password: ");
         String password = sc.nextLine();
 
-        User user = userService.login(email, password);
-        System.out.println(user != null ? "Login Successful! Welcome " + user.getUsername() : "Invalid Credentials!");
+        UserAccount user = userService.login(email, password);
+
+        System.out.println(user != null
+                ? "Login Successful! Welcome " + user.getFullName()
+                : "Invalid Credentials");
     }
 
     private static void changePassword(Scanner sc) {
@@ -84,7 +95,7 @@ public class AuthController {
         String newPass = sc.nextLine();
 
         boolean success = userService.changePassword(email, oldPass, newPass);
-        System.out.println(success ? "Password changed!" : "Password change failed!");
+        System.out.println(success ? "Password updated" : "Failed to update password");
     }
 
     private static void forgotPassword(Scanner sc) {
@@ -94,7 +105,7 @@ public class AuthController {
         System.out.print("Security Answer: ");
         String answer = sc.nextLine();
 
-        String password = userService.forgotPassword(email, answer);
-        System.out.println(password != null ? "Your password is: " + password : "Invalid details!");
+        String pwd = userService.forgotPassword(email, answer);
+        System.out.println(pwd != null ? "Your password: " + pwd : "Invalid details");
     }
 }

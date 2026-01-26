@@ -1,12 +1,12 @@
-package com.revplay.auth.service;
+package com.revplay.service;
 
-import com.revplay.auth.model.User;
+import com.revplay.model.UserAccount;
 
 public interface UserService {
 
-    boolean registerUser(User user);
+    boolean registerUser(UserAccount user);
 
-    User login(String email, String password);
+    UserAccount login(String email, String password);
 
     boolean changePassword(String email, String oldPassword, String newPassword);
 
