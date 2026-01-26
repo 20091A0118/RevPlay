@@ -1,91 +1,102 @@
 package com.revplay.test;
 
-import com.revplay.dao.*;
-import com.revplay.model.*;
+import com.revplay.controller.*;
+import com.revplay.dao.SearchDaoImpl;
+import com.revplay.model.Song;
 
-import java.util.*;
+import java.util.List;
+import java.util.Scanner;
 
 public class UserLibraryTest {
 
     public static void main(String[] args) {
 
-        SearchDaoImpl search = new SearchDaoImpl();
-        FavoriteDaoImpl fav = new FavoriteDaoImpl();
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("1. Search Songs");
-        System.out.println("2. Search Artists");
-        System.out.println("3. Search Albums");
-        System.out.println("4. Search Podcasts");
-        System.out.println("5. Browse by Genre");
-        System.out.println("6. Browse by Artist");
-        System.out.println("7. Browse by Album");
-        System.out.println("8. View Favorites");
+        // Controllers
+        FavoriteController favoriteController = new FavoriteController();
+        ListeningHistoryController historyController = new ListeningHistoryController();
+        SearchDaoImpl search = new SearchDaoImpl();
 
-        int ch = sc.nextInt();
+        int USER_ID = 1; // existing user in DB
 
-        switch (ch) {
+        while (true) {
+            System.out.println("\n========= RevPlay =========");
+            System.out.println("1. Search Songs");
+            System.out.println("2. Search Artists");
+            System.out.println("3. Search Albums");
+            System.out.println("4. Browse by Genre");
+            System.out.println("5. Browse by Artist");
+            System.out.println("6. Browse by Album");
+            System.out.println("7. View Favorites");
+            System.out.println("8. Add Favorite");
+            System.out.println("9. Remove Favorite");
+            System.out.println("10. Play Song");
+            System.out.println("11. Pause Song");
+            System.out.println("12. Skip Song");
+            System.out.println("13. Recently Played");
+            System.out.println("0. Exit");
+            System.out.print("Enter choice: ");
 
-            case 1 -> {
-                System.out.println("🎵 Songs:");
-                search.searchSongs("").forEach(
-                        s -> System.out.println(s.getSongId() + " - " + s.getTitle())
-                );
+            int choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
+
+                case 1 -> {
+                    System.out.print("Keyword (Enter for all): ");
+                    String kw = sc.nextLine();
+                    List<Song> songs = search.searchSongs(kw);
+                    if (songs.isEmpty()) System.out.println("No songs found.");
+                    else songs.forEach(System.out::println);
+                }
+
+                case 2 -> search.searchArtists("").forEach(System.out::println);
+
+                case 3 -> search.searchAlbums("").forEach(System.out::println);
+
+                case 4 -> search.browseByGenre(1).forEach(System.out::println);
+
+                case 5 -> search.browseByArtist(1).forEach(System.out::println);
+
+                case 6 -> search.browseByAlbum(1).forEach(System.out::println);
+
+                case 7 -> favoriteController.view(USER_ID);
+
+                case 8 -> {
+                    System.out.print("Song id: ");
+                    favoriteController.add(USER_ID, sc.nextInt());
+                }
+
+                case 9 -> {
+                    System.out.print("Song id: ");
+                    favoriteController.remove(USER_ID, sc.nextInt());
+                }
+
+                case 10 -> {
+                    System.out.print("Song id: ");
+                    historyController.play(USER_ID, sc.nextInt());
+                }
+
+                case 11 -> {
+                    System.out.print("Song id: ");
+                    historyController.pause(USER_ID, sc.nextInt());
+                }
+
+                case 12 -> {
+                    System.out.print("Song id: ");
+                    historyController.skip(USER_ID, sc.nextInt());
+                }
+
+                case 13 -> historyController.recent(USER_ID);
+
+                case 0 -> {
+                    System.out.println("Thank you for using RevPlay 👋");
+                    return;
+                }
+
+                default -> System.out.println("Invalid choice!");
             }
-
-            case 2 -> {
-                System.out.println("🎤 Artists:");
-                search.searchArtists("").forEach(
-                        a -> System.out.println(a.getArtistId() + " - " + a.getStageName())
-                );
-            }
-
-            case 3 -> {
-                System.out.println("💿 Albums:");
-                search.searchAlbums("").forEach(
-                        a -> System.out.println(a.getAlbumId() + " - " + a.getTitle())
-                );
-            }
-
-            case 4 -> {
-                System.out.println("🎙️ Podcasts:");
-                search.searchPodcasts("").forEach(
-                        p -> System.out.println(p.getPodcastId() + " - " + p.getTitle())
-                );
-            }
-
-            case 5 -> {
-                System.out.print("Enter genre id: ");
-                int id = sc.nextInt();
-                search.browseByGenre(id).forEach(
-                        s -> System.out.println(s.getSongId() + " - " + s.getTitle())
-                );
-            }
-
-            case 6 -> {
-                System.out.print("Enter artist id: ");
-                int id = sc.nextInt();
-                search.browseByArtist(id).forEach(
-                        s -> System.out.println(s.getSongId() + " - " + s.getTitle())
-                );
-            }
-
-            case 7 -> {
-                System.out.print("Enter album id: ");
-                int id = sc.nextInt();
-                search.browseByAlbum(id).forEach(
-                        s -> System.out.println(s.getSongId() + " - " + s.getTitle())
-                );
-            }
-
-            case 8 -> {
-                System.out.println("❤️ Favorites:");
-                fav.getFavoriteSongs(1).forEach(
-                        s -> System.out.println(s.getSongId() + " - " + s.getTitle())
-                );
-            }
-
-            default -> System.out.println("Invalid option");
         }
     }
 }
