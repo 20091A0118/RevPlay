@@ -1,5 +1,6 @@
 package com.revplay.controller;
 
+import com.revplay.dashboard.DashboardController;
 import com.revplay.model.UserAccount;
 import com.revplay.service.UserService;
 import com.revplay.service.UserServiceImpl;
@@ -79,9 +80,12 @@ public class AuthController {
 
         UserAccount user = userService.login(email, password);
 
-        System.out.println(user != null
-                ? "Login Successful! Welcome " + user.getFullName()
-                : "Invalid Credentials");
+        if (user != null) {
+            System.out.println("Login Successful! Welcome " + user.getFullName());
+            DashboardController.start(user);   // 🔥 DASHBOARD ENTRY
+        } else {
+            System.out.println("Invalid Credentials");
+        }
     }
 
     private static void changePassword(Scanner sc) {
