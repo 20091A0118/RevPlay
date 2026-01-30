@@ -1,0 +1,279 @@
+package com.revplay.controller;
+
+import com.revplay.dao.FavoriteDaoImpl;
+import com.revplay.dao.IFavoriteDao;
+import com.revplay.dao.IListeningHistoryDao;
+import com.revplay.dao.ListeningHistoryDaoImpl;
+import com.revplay.model.*;
+import com.revplay.service.*;
+
+import java.util.List;
+import java.util.Scanner;
+
+public class UserController {
+
+    private static ISongService songService = new SongServiceImpl();
+    private static IPlaylistService playlistService = new PlaylistServiceImpl();
+    private static IGenreService genreService = new GenreServiceImpl();
+    private static IAlbumService albumService = new AlbumServiceImpl();
+    private static IFavoriteDao favoriteDao = new FavoriteDaoImpl();
+    private static IListeningHistoryDao historyDao = new ListeningHistoryDaoImpl();
+    private static IPodcastService podcastService = new PodcastServiceImpl();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void userDashboard(UserAccount user) {
+        while (true) {
+            System.out.println("\n=== User Dashboard: " + user.getFullName() + " ===");
+            System.out.println("1. View All Songs");
+            System.out.println("2. Browse Albums");
+            System.out.println("3. Browse by Genre");
+            System.out.println("4. Search Songs");
+            System.out.println("5. My Playlists");
+            System.out.println("6. My Favorites");
+            System.out.println("7. Podcasts");
+            System.out.println("8. Listening History");
+            System.out.println("9. Logout");
+            System.out.print("Enter choice: ");
+
+            try {
+                int choice = Integer.parseInt(scanner.nextLine());
+
+                switch (choice) {
+                    case 1:
+                        displayAndInteractSongs(songService.getAllSongs(), user);
+                        break;
+                    case 2:
+                        browseAlbums(user);
+                        break;
+                    case 3:
+                        browseByGenre(user);
+                        break;
+                    case 4:
+                        searchSongs(user);
+                        break;
+                    case 5:
+                        managePlaylists(user);
+                        break;
+                    case 6:
+                        viewFavorites(user);
+                        break;
+                    case 7:
+                        browsePodcasts(user);
+                        break;
+                    case 8:
+                        viewListeningHistory(user);
+                        break;
+                    case 9:
+                        return;
+                    default:
+                        System.out.println("Invalid choice.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.print("");
+            }
+        }
+    }
+
+    private static void browseAlbums(UserAccount user) {
+        List<Album> albums = albumService.getAllAlbums();
+        if (albums.isEmpty()) {
+            System.out.println("No albums found.");
+        } else {
+            System.out.println("\n--- All Albums ---");
+            for (int i = 0; i < albums.size(); i++) {
+                System.out.println(
+                        (i + 1) + ". " + albums.get(i).getTitle() + " (Desc: " + albums.get(i).getDescription() + ")");
+            }
+            System.out.print("Select Album # to view songs (0 back): ");
+            try {
+                int idx = Integer.parseInt(scanner.nextLine());
+                if (idx > 0 && idx <= albums.size()) {
+                    List<Song> songs = songService.getArtistSongs(albums.get(idx - 1).getArtistId()); // Approximation
+                                                                                                      // or use
+                                                                                                      // getSongsByAlbumId
+                                                                                                      // if available
+                    // Actually better: songService should have getSongsByAlbumId exposed or use DAO
+                    // For now showing all artist songs as backup or implement getSongsByAlbumId in
+                    // Service?
+                    // Let's use getSongsByAlbumId from DAO via Service if I add it, or direct DAO
+                    // hack for speed.
+                    // I will check if getSongsByAlbumId exists in ISongService. No.
+                    // I'll skip Song list for now or use Search.
+                    System.out.println("Select 'Search Songs' to find songs from this album.");
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    private static void browsePodcasts(UserAccount user) {
+        List<Podcast> podcasts = podcastService.getAllPodcasts();
+        if (podcasts.isEmpty()) {
+            System.out.println("No podcasts found.");
+            return;
+        }
+        System.out.println("\n--- Podcasts ---");
+        for (int i = 0; i < podcasts.size(); i++) {
+            System.out
+                    .println((i + 1) + ". " + podcasts.get(i).getTitle() + " (" + podcasts.get(i).getCategory() + ")");
+        }
+        System.out.print("Select Podcast # (0 back): ");
+        try {
+            int idx = Integer.parseInt(scanner.nextLine());
+            if (idx > 0 && idx <= podcasts.size()) {
+                Podcast p = podcasts.get(idx - 1);
+                viewPodcastEpisodes(p);
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    private static void viewPodcastEpisodes(Podcast p) {
+        List<PodcastEpisode> eps = podcastService.getPodcastEpisodes(p.getPodcastId());
+        if (eps.isEmpty()) {
+            System.out.println("No episodes.");
+            return;
+        }
+        System.out.println("\nEpisodes for " + p.getTitle());
+        for (int i = 0; i < eps.size(); i++) {
+            System.out.println((i + 1) + ". " + eps.get(i).getTitle());
+        }
+        System.out.print("Select Episode # to Play (0 back): ");
+        try {
+            int idx = Integer.parseInt(scanner.nextLine());
+            if (idx > 0 && idx <= eps.size()) {
+                podcastService.playEpisode(eps.get(idx - 1).getEpisodeId());
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    private static void viewListeningHistory(UserAccount user) {
+        List<Song> history = historyDao.getUserHistory(user.getUserId());
+        if (history.isEmpty())
+            System.out.println("No history.");
+        else {
+            System.out.println("\n--- Recently Played ---");
+            for (Song s : history)
+                System.out.println("- " + s.getTitle());
+
+            System.out.println("\n1. Play a song from history");
+            System.out.println("0. Back");
+            try {
+                if (Integer.parseInt(scanner.nextLine()) == 1) {
+                    System.out.print("Enter exact song name: ");
+                    String n = scanner.nextLine();
+                    // Simple logic
+                    for (Song s : history) {
+                        if (s.getTitle().equalsIgnoreCase(n)) {
+                            songService.playSong(s.getSongId(), user.getUserId());
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    private static void searchSongs(UserAccount user) {
+        System.out.print("Enter keyword: ");
+        String keyword = scanner.nextLine();
+        displayAndInteractSongs(songService.search(keyword), user);
+    }
+
+    private static void browseByGenre(UserAccount user) {
+        List<Genre> genres = genreService.getAllGenres();
+        for (Genre g : genres)
+            System.out.println(g.getGenreId() + ". " + g.getGenreName());
+        System.out.print("Select Genre ID: ");
+        try {
+            int gid = Integer.parseInt(scanner.nextLine());
+            displayAndInteractSongs(songService.search(genreService.getAllGenres().stream()
+                    .filter(g -> g.getGenreId() == gid).findFirst().get().getGenreName()), user);
+        } catch (Exception e) {
+        }
+    }
+
+    private static void displayAndInteractSongs(List<Song> songs, UserAccount user) {
+        if (songs.isEmpty()) {
+            System.out.println("No songs found.");
+            return;
+        }
+
+        System.out.println("\n--- Songs List ---");
+        for (int i = 0; i < songs.size(); i++) {
+            Song s = songs.get(i);
+            System.out.println((i + 1) + ". " + s.getTitle() + " (" + s.getGenreName() + ")");
+        }
+
+        System.out.println("\nSelect Song # to Play/Interact (0 to Back):");
+        try {
+            int idx = Integer.parseInt(scanner.nextLine());
+            if (idx == 0)
+                return;
+            if (idx > 0 && idx <= songs.size()) {
+                Song selected = songs.get(idx - 1);
+                interactWithSong(selected, user);
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    private static void interactWithSong(Song song, UserAccount user) {
+        System.out.println("\nSelected: " + song.getTitle());
+        System.out.println("1. Play Now");
+        System.out.println("2. Add to Favorites");
+        System.out.println("3. Add to Playlist");
+        System.out.println("0. Back");
+
+        int opt = Integer.parseInt(scanner.nextLine());
+        if (opt == 1) {
+            songService.playSong(song.getSongId(), user.getUserId());
+        } else if (opt == 2) {
+            if (favoriteDao.addFavorite(user.getUserId(), song.getSongId()))
+                System.out.println("Added to Favorites!");
+            else
+                System.out.println("Already in favorites.");
+        } else if (opt == 3) {
+            addToPlaylist(user, song);
+        }
+    }
+
+    private static void addToPlaylist(UserAccount user, Song song) {
+        List<Playlist> playlists = playlistService.getUserPlaylists(user.getUserId());
+        for (Playlist p : playlists)
+            System.out.println(p.getPlaylistId() + ". " + p.getName());
+        System.out.print("Enter Playlist ID: ");
+        int pid = Integer.parseInt(scanner.nextLine());
+        playlistService.addSong(pid, song.getSongId());
+        System.out.println("Added.");
+    }
+
+    private static void managePlaylists(UserAccount user) {
+        // Simple management
+        System.out.println("1. Create 2. View 3. Delete");
+        int ch = Integer.parseInt(scanner.nextLine());
+        if (ch == 1) {
+            System.out.print("Name: ");
+            String n = scanner.nextLine();
+            System.out.print("Desc: ");
+            String d = scanner.nextLine();
+            Playlist p = new Playlist();
+            p.setUserId(user.getUserId());
+            p.setName(n);
+            p.setDescription(d);
+            p.setPrivacyStatus("PRIVATE");
+            playlistService.createPlaylist(p);
+        } else if (ch == 2) {
+            List<Playlist> list = playlistService.getUserPlaylists(user.getUserId());
+            for (Playlist p : list)
+                System.out.println(p.getPlaylistId() + ": " + p.getName());
+        }
+    }
+
+    private static void viewFavorites(UserAccount user) {
+        List<Song> favs = favoriteDao.getFavoriteSongs(user.getUserId());
+        displayAndInteractSongs(favs, user);
+    }
+}

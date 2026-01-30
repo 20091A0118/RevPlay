@@ -1,0 +1,42 @@
+Jan 29, 2026 9:43:40 PM com.revplay.util.LoggerUtil <clinit>
+INFO: Logger initialized.
+Jan 29, 2026 9:43:40 PM com.revplay.util.LoggerUtil logInfo
+INFO: Attempting to register artist: dsp@gmail.com
+Jan 29, 2026 9:43:41 PM com.revplay.util.LoggerUtil logInfo
+INFO: JDBC Driver Loaded
+Jan 29, 2026 9:43:47 PM com.revplay.util.LoggerUtil logInfo
+INFO: Artist registered successfully: dsp@gmail.com
+Jan 29, 2026 9:56:36 PM com.revplay.util.LoggerUtil logInfo
+INFO: Attempting to register user: pilli@gmail.com
+Jan 29, 2026 9:56:39 PM com.revplay.util.LoggerUtil logInfo
+INFO: User registered successfully: pilli@gmail.com
+Jan 29, 2026 10:57:44 PM com.revplay.util.LoggerUtil <clinit>
+INFO: Logger initialized.
+Jan 29, 2026 10:57:44 PM com.revplay.util.LoggerUtil logInfo
+INFO: JDBC Driver Loaded
+Jan 30, 2026 9:13:29 AM com.revplay.util.LoggerUtil <clinit>
+INFO: Logger initialized.
+Jan 30, 2026 9:13:29 AM com.revplay.util.LoggerUtil logError
+SEVERE: Failed to load database config
+java.lang.RuntimeException: db.properties not found in src folder
+	at com.revplay.util.JDBCUtil.<clinit>(JDBCUtil.java:23)
+	at com.revplay.dao.UserAccountDaoImpl.getUserAccountByEmail(UserAccountDaoImpl.java:73)
+	at com.revplay.service.UserAccountServiceImpl.getUserByEmail(UserAccountServiceImpl.java:56)
+	at com.revplay.main.Main.loginUser(Main.java:78)
+	at com.revplay.main.Main.main(Main.java:39)
+
+Jan 30, 2026 9:18:29 AM com.revplay.util.LoggerUtil <clinit>
+INFO: Logger initialized.
+Jan 30, 2026 9:18:29 AM com.revplay.util.LoggerUtil logError
+SEVERE: Failed to load database config
+java.lang.RuntimeException: db.properties not found in src folder
+	at com.revplay.util.JDBCUtil.<clinit>(JDBCUtil.java:23)
+	at com.revplay.dao.UserAccountDaoImpl.getUserAccountByEmail(UserAccountDaoImpl.java:73)
+	at com.revplay.service.UserAccountServiceImpl.getUserByEmail(UserAccountServiceImpl.java:56)
+	at com.revplay.main.Main.loginUser(Main.java:78)
+	at com.revplay.main.Main.main(Main.java:39)
+
+Jan 30, 2026 9:23:05 AM com.revplay.util.LoggerUtil <clinit>
+INFO: Logger initialized.
+Jan 30, 2026 9:23:05 AM com.revplay.util.LoggerUtil logInfo
+INFO: JDBC Driver Loaded
