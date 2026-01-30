@@ -19,6 +19,7 @@ public class UserController {
     private static IFavoriteDao favoriteDao = new FavoriteDaoImpl();
     private static IListeningHistoryDao historyDao = new ListeningHistoryDaoImpl();
     private static IPodcastService podcastService = new PodcastServiceImpl();
+    private static IUserAccountService userService = new UserAccountServiceImpl();
     private static Scanner scanner = new Scanner(System.in);
 
     public static void userDashboard(UserAccount user) {
@@ -32,7 +33,8 @@ public class UserController {
             System.out.println("6. My Favorites");
             System.out.println("7. Podcasts");
             System.out.println("8. Listening History");
-            System.out.println("9. Logout");
+            System.out.println("9. Update Password");
+            System.out.println("0. Logout");
             System.out.print("Enter choice: ");
 
             try {
@@ -64,6 +66,10 @@ public class UserController {
                         viewListeningHistory(user);
                         break;
                     case 9:
+                        updatePassword(user);
+                        break;
+                    case 0:
+                        System.out.println("Logging out...");
                         return;
                     default:
                         System.out.println("Invalid choice.");
@@ -71,6 +77,34 @@ public class UserController {
             } catch (NumberFormatException e) {
                 System.out.print("");
             }
+        }
+    }
+
+    private static void updatePassword(UserAccount user) {
+        System.out.println("\n--- Update Password ---");
+        System.out.print("Enter Current Password: ");
+        String currentPass = scanner.nextLine();
+
+        if (!currentPass.equals(user.getPasswordHash())) {
+            System.out.println("❌ Current password is incorrect.");
+            return;
+        }
+
+        System.out.print("Enter New Password: ");
+        String newPass = scanner.nextLine();
+        System.out.print("Confirm New Password: ");
+        String confirmPass = scanner.nextLine();
+
+        if (!newPass.equals(confirmPass)) {
+            System.out.println("❌ Passwords do not match.");
+            return;
+        }
+
+        user.setPasswordHash(newPass);
+        if (userService.updateUserAccount(user)) {
+            System.out.println("✅ Password updated successfully!");
+        } else {
+            System.out.println("❌ Failed to update password.");
         }
     }
 
@@ -88,17 +122,7 @@ public class UserController {
             try {
                 int idx = Integer.parseInt(scanner.nextLine());
                 if (idx > 0 && idx <= albums.size()) {
-                    List<Song> songs = songService.getArtistSongs(albums.get(idx - 1).getArtistId()); // Approximation
-                                                                                                      // or use
-                                                                                                      // getSongsByAlbumId
-                                                                                                      // if available
-                    // Actually better: songService should have getSongsByAlbumId exposed or use DAO
-                    // For now showing all artist songs as backup or implement getSongsByAlbumId in
-                    // Service?
-                    // Let's use getSongsByAlbumId from DAO via Service if I add it, or direct DAO
-                    // hack for speed.
-                    // I will check if getSongsByAlbumId exists in ISongService. No.
-                    // I'll skip Song list for now or use Search.
+                    List<Song> songs = songService.getArtistSongs(albums.get(idx - 1).getArtistId());
                     System.out.println("Select 'Search Songs' to find songs from this album.");
                 }
             } catch (Exception e) {
@@ -163,7 +187,6 @@ public class UserController {
                 if (Integer.parseInt(scanner.nextLine()) == 1) {
                     System.out.print("Enter exact song name: ");
                     String n = scanner.nextLine();
-                    // Simple logic
                     for (Song s : history) {
                         if (s.getTitle().equalsIgnoreCase(n)) {
                             songService.playSong(s.getSongId(), user.getUserId());
@@ -204,7 +227,8 @@ public class UserController {
         System.out.println("\n--- Songs List ---");
         for (int i = 0; i < songs.size(); i++) {
             Song s = songs.get(i);
-            System.out.println((i + 1) + ". " + s.getTitle() + " (" + s.getGenreName() + ")");
+            System.out.println(
+                    (i + 1) + ". " + s.getTitle() + " (" + s.getGenreName() + ") | Plays: " + s.getPlayCount());
         }
 
         System.out.println("\nSelect Song # to Play/Interact (0 to Back):");
@@ -214,61 +238,201 @@ public class UserController {
                 return;
             if (idx > 0 && idx <= songs.size()) {
                 Song selected = songs.get(idx - 1);
-                interactWithSong(selected, user);
+                interactWithSong(selected, user, songs, idx - 1);
             }
         } catch (Exception e) {
         }
     }
 
-    private static void interactWithSong(Song song, UserAccount user) {
-        System.out.println("\nSelected: " + song.getTitle());
-        System.out.println("1. Play Now");
-        System.out.println("2. Add to Favorites");
-        System.out.println("3. Add to Playlist");
-        System.out.println("0. Back");
+    private static void interactWithSong(Song song, UserAccount user, List<Song> songList, int currentIndex) {
+        boolean playing = false;
+        boolean repeat = false;
 
-        int opt = Integer.parseInt(scanner.nextLine());
-        if (opt == 1) {
-            songService.playSong(song.getSongId(), user.getUserId());
-        } else if (opt == 2) {
-            if (favoriteDao.addFavorite(user.getUserId(), song.getSongId()))
-                System.out.println("Added to Favorites!");
-            else
-                System.out.println("Already in favorites.");
-        } else if (opt == 3) {
-            addToPlaylist(user, song);
+        while (true) {
+            System.out.println("\n🎵 === NOW PLAYING === 🎵");
+            System.out.println("   🎶 " + song.getTitle());
+            System.out.println("   🎤 Genre: " + song.getGenreName());
+            System.out.println("   📊 Play Count: " + song.getPlayCount());
+            System.out.println("   🔁 Repeat: " + (repeat ? "ON" : "OFF"));
+            System.out.println("=============================");
+            System.out.println("1. ▶ Play");
+            System.out.println("2. ⏸ Pause");
+            System.out.println("3. 🔁 Toggle Repeat");
+            System.out.println("4. ⏭ Skip to Next");
+            System.out.println("5. ⏮ Previous");
+            System.out.println("6. ❤ Add to Favorites");
+            System.out.println("7. ➕ Add to Playlist");
+            System.out.println("0. Back");
+            System.out.print("Enter choice: ");
+
+            try {
+                int opt = Integer.parseInt(scanner.nextLine());
+
+                switch (opt) {
+                    case 1: // Play
+                        playing = true;
+                        songService.playSong(song.getSongId(), user.getUserId());
+                        // Refresh play count
+                        Song refreshed = songService.getSongDetails(song.getSongId());
+                        if (refreshed != null) {
+                            song.setPlayCount(refreshed.getPlayCount());
+                        }
+                        break;
+                    case 2: // Pause
+                        if (playing) {
+                            System.out.println("⏸ Paused: " + song.getTitle());
+                            playing = false;
+                        } else {
+                            System.out.println("Song is not playing.");
+                        }
+                        break;
+                    case 3: // Toggle Repeat
+                        repeat = !repeat;
+                        System.out.println("🔁 Repeat is now " + (repeat ? "ON" : "OFF"));
+                        break;
+                    case 4: // Skip to Next
+                        if (songList != null && currentIndex < songList.size() - 1) {
+                            currentIndex++;
+                            song = songList.get(currentIndex);
+                            System.out.println("⏭ Skipped to: " + song.getTitle());
+                            songService.playSong(song.getSongId(), user.getUserId());
+                            playing = true;
+                        } else if (repeat && songList != null && !songList.isEmpty()) {
+                            currentIndex = 0;
+                            song = songList.get(currentIndex);
+                            System.out.println("🔁 Repeating from start: " + song.getTitle());
+                            songService.playSong(song.getSongId(), user.getUserId());
+                            playing = true;
+                        } else {
+                            System.out.println("No more songs in list.");
+                        }
+                        break;
+                    case 5: // Previous
+                        if (songList != null && currentIndex > 0) {
+                            currentIndex--;
+                            song = songList.get(currentIndex);
+                            System.out.println("⏮ Previous: " + song.getTitle());
+                            songService.playSong(song.getSongId(), user.getUserId());
+                            playing = true;
+                        } else {
+                            System.out.println("Already at the first song.");
+                        }
+                        break;
+                    case 6: // Add to Favorites
+                        if (favoriteDao.addFavorite(user.getUserId(), song.getSongId()))
+                            System.out.println("❤ Added to Favorites!");
+                        else
+                            System.out.println("Already in favorites.");
+                        break;
+                    case 7: // Add to Playlist
+                        addToPlaylist(user, song);
+                        break;
+                    case 0:
+                        return;
+                    default:
+                        System.out.println("Invalid choice.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input.");
+            }
         }
     }
 
     private static void addToPlaylist(UserAccount user, Song song) {
         List<Playlist> playlists = playlistService.getUserPlaylists(user.getUserId());
+        if (playlists.isEmpty()) {
+            System.out.println("No playlists. Create one first.");
+            return;
+        }
         for (Playlist p : playlists)
             System.out.println(p.getPlaylistId() + ". " + p.getName());
         System.out.print("Enter Playlist ID: ");
-        int pid = Integer.parseInt(scanner.nextLine());
-        playlistService.addSong(pid, song.getSongId());
-        System.out.println("Added.");
+        try {
+            int pid = Integer.parseInt(scanner.nextLine());
+            playlistService.addSong(pid, song.getSongId());
+            System.out.println("✅ Added to playlist.");
+        } catch (Exception e) {
+            System.out.println("Invalid input.");
+        }
     }
 
     private static void managePlaylists(UserAccount user) {
-        // Simple management
-        System.out.println("1. Create 2. View 3. Delete");
-        int ch = Integer.parseInt(scanner.nextLine());
-        if (ch == 1) {
-            System.out.print("Name: ");
-            String n = scanner.nextLine();
-            System.out.print("Desc: ");
-            String d = scanner.nextLine();
-            Playlist p = new Playlist();
-            p.setUserId(user.getUserId());
-            p.setName(n);
-            p.setDescription(d);
-            p.setPrivacyStatus("PRIVATE");
-            playlistService.createPlaylist(p);
-        } else if (ch == 2) {
-            List<Playlist> list = playlistService.getUserPlaylists(user.getUserId());
-            for (Playlist p : list)
-                System.out.println(p.getPlaylistId() + ": " + p.getName());
+        System.out.println("\n--- My Playlists ---");
+        System.out.println("1. Create Playlist");
+        System.out.println("2. View Playlists");
+        System.out.println("3. Delete Playlist");
+        System.out.println("0. Back");
+        System.out.print("Enter choice: ");
+
+        try {
+            int ch = Integer.parseInt(scanner.nextLine());
+
+            switch (ch) {
+                case 1: // Create
+                    System.out.print("Playlist Name: ");
+                    String n = scanner.nextLine();
+                    System.out.print("Description: ");
+                    String d = scanner.nextLine();
+                    Playlist p = new Playlist();
+                    p.setUserId(user.getUserId());
+                    p.setName(n);
+                    p.setDescription(d);
+                    p.setPrivacyStatus("PRIVATE");
+                    if (playlistService.createPlaylist(p)) {
+                        System.out.println("✅ Playlist created!");
+                    } else {
+                        System.out.println("❌ Failed to create playlist.");
+                    }
+                    break;
+
+                case 2: // View
+                    List<Playlist> list = playlistService.getUserPlaylists(user.getUserId());
+                    if (list.isEmpty()) {
+                        System.out.println("No playlists found.");
+                    } else {
+                        System.out.println("\nYour Playlists:");
+                        for (Playlist pl : list) {
+                            System.out.println("  ID: " + pl.getPlaylistId() + " | " + pl.getName() + " ("
+                                    + pl.getPrivacyStatus() + ")");
+                        }
+                    }
+                    break;
+
+                case 3: // Delete
+                    List<Playlist> deleteList = playlistService.getUserPlaylists(user.getUserId());
+                    if (deleteList.isEmpty()) {
+                        System.out.println("No playlists to delete.");
+                    } else {
+                        System.out.println("\nYour Playlists:");
+                        for (Playlist pl : deleteList) {
+                            System.out.println("  ID: " + pl.getPlaylistId() + " | " + pl.getName());
+                        }
+                        System.out.print("Enter Playlist ID to delete (0 to cancel): ");
+                        int deleteId = Integer.parseInt(scanner.nextLine());
+                        if (deleteId > 0) {
+                            // Verify the playlist belongs to the user
+                            boolean found = deleteList.stream().anyMatch(pl -> pl.getPlaylistId() == deleteId);
+                            if (found) {
+                                if (playlistService.deletePlaylist(deleteId)) {
+                                    System.out.println("✅ Playlist deleted!");
+                                } else {
+                                    System.out.println("❌ Failed to delete playlist.");
+                                }
+                            } else {
+                                System.out.println("❌ Invalid playlist ID.");
+                            }
+                        }
+                    }
+                    break;
+
+                case 0:
+                    break;
+
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input.");
         }
     }
 

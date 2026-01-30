@@ -1,87 +1,121 @@
 package com.revplay.service;
 
-import com.revplay.dao.FakePodcastDao;
 import com.revplay.model.Podcast;
 import com.revplay.model.PodcastEpisode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Unit tests for PodcastService using mock DAO.
+ */
 public class PodcastServiceTest {
 
+    private MockPodcastDao mockPodcastDao;
     private PodcastServiceImpl podcastService;
-    private FakePodcastDao fakeDao;
 
     @BeforeEach
     public void setup() {
+        mockPodcastDao = new MockPodcastDao();
         podcastService = new PodcastServiceImpl();
-        fakeDao = new FakePodcastDao();
-        podcastService.setPodcastDao(fakeDao);
+        podcastService.setPodcastDao(mockPodcastDao);
     }
 
     @Test
     public void testCreatePodcast_Success() {
-        Podcast p = new Podcast();
-        p.setTitle("Tech Talk");
-        p.setHostName("John Doe");
-        p.setCategory("Technology");
-        p.setCreatedAt(LocalDateTime.now());
+        Podcast podcast = new Podcast();
+        podcast.setTitle("Tech Talk");
+        podcast.setHostName("John Doe");
+        podcast.setCategory("Technology");
 
-        boolean result = podcastService.createPodcast(p);
+        boolean result = podcastService.createPodcast(podcast);
+
         assertTrue(result, "Podcast creation should succeed");
-        assertEquals(1, fakeDao.getAllPodcasts().size());
-        assertEquals("Tech Talk", fakeDao.getAllPodcasts().get(0).getTitle());
+        assertEquals(1, podcast.getPodcastId());
+    }
+
+    @Test
+    public void testSearchPodcastByTitle() {
+        Podcast p1 = new Podcast();
+        p1.setTitle("Java Programming");
+        mockPodcastDao.createPodcast(p1);
+
+        Podcast p2 = new Podcast();
+        p2.setTitle("Python Basics");
+        mockPodcastDao.createPodcast(p2);
+
+        Podcast p3 = new Podcast();
+        p3.setTitle("Advanced Java");
+        mockPodcastDao.createPodcast(p3);
+
+        List<Podcast> results = podcastService.searchPodcastByTitle("Java");
+
+        assertNotNull(results);
+        assertEquals(2, results.size());
     }
 
     @Test
     public void testAddEpisode_Success() {
-        Podcast p = new Podcast();
-        p.setPodcastId(1);
-        fakeDao.createPodcast(p);
+        Podcast podcast = new Podcast();
+        podcast.setTitle("Episode Test Podcast");
+        mockPodcastDao.createPodcast(podcast);
 
-        PodcastEpisode ep = new PodcastEpisode();
-        ep.setPodcastId(1);
-        ep.setTitle("Episode 1");
-        ep.setDurationSeconds(3600);
-        ep.setCreatedAt(LocalDateTime.now());
+        PodcastEpisode episode = new PodcastEpisode();
+        episode.setPodcastId(podcast.getPodcastId());
+        episode.setTitle("Episode 1");
+        episode.setDurationSeconds(3600);
 
-        boolean result = podcastService.addEpisode(ep);
+        boolean result = podcastService.addEpisode(episode);
+
         assertTrue(result, "Adding episode should succeed");
-        assertEquals(1, fakeDao.getEpisodesByPodcastId(1).size());
+        assertEquals(1, episode.getEpisodeId());
+    }
+
+    @Test
+    public void testAddEpisode_InvalidPodcast() {
+        PodcastEpisode episode = new PodcastEpisode();
+        episode.setPodcastId(999); // Non-existent podcast
+        episode.setTitle("Orphan Episode");
+
+        boolean result = podcastService.addEpisode(episode);
+
+        assertFalse(result, "Adding episode to non-existent podcast should fail");
     }
 
     @Test
     public void testPlayEpisode_Success() {
-        PodcastEpisode ep = new PodcastEpisode();
-        ep.setEpisodeId(10);
-        ep.setTitle("Cool Episode");
-        fakeDao.addEpisode(ep);
+        Podcast podcast = new Podcast();
+        podcast.setTitle("Play Test Podcast");
+        mockPodcastDao.createPodcast(podcast);
 
-        boolean result = podcastService.playEpisode(10);
-        assertTrue(result, "Playing episode should succeed");
-        assertEquals(1, ep.getPlayCount(), "Play count should increment");
+        PodcastEpisode episode = new PodcastEpisode();
+        episode.setPodcastId(podcast.getPodcastId());
+        episode.setTitle("Play Me");
+        mockPodcastDao.addEpisode(episode);
+
+        boolean result = podcastService.playEpisode(episode.getEpisodeId());
+
+        assertTrue(result);
+        assertEquals(1, mockPodcastDao.getEpisodeById(episode.getEpisodeId()).getPlayCount());
     }
 
     @Test
     public void testPlayEpisode_NotFound() {
-        boolean result = podcastService.playEpisode(999);
+        boolean result = podcastService.playEpisode(99999);
+
         assertFalse(result, "Playing non-existent episode should fail");
     }
 
     @Test
-    public void testSearchPodcast() {
-        Podcast p1 = new Podcast();
-        p1.setTitle("Java Programming");
-        Podcast p2 = new Podcast();
-        p2.setTitle("Cooking 101");
-        fakeDao.createPodcast(p1);
-        fakeDao.createPodcast(p2);
+    public void testGetAllPodcasts() {
+        mockPodcastDao.createPodcast(new Podcast());
+        mockPodcastDao.createPodcast(new Podcast());
 
-        List<Podcast> results = podcastService.searchPodcastByTitle("Java");
-        assertEquals(1, results.size());
-        assertEquals("Java Programming", results.get(0).getTitle());
+        List<Podcast> all = podcastService.getAllPodcasts();
+
+        assertNotNull(all);
+        assertEquals(2, all.size());
     }
 }

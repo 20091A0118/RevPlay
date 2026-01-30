@@ -25,7 +25,7 @@ public class ArtistController {
             System.out.println("3. Manage Podcasts");
             System.out.println("4. View My Songs");
             System.out.println("5. View My Albums");
-            System.out.println("6. Logout");
+            System.out.println("0. Logout");
             System.out.print("Enter choice: ");
 
             try {
@@ -46,7 +46,7 @@ public class ArtistController {
                     case 5:
                         viewMyAlbums(artist);
                         break;
-                    case 6:
+                    case 0:
                         System.out.println("Logging out...");
                         return;
                     default:
@@ -146,13 +146,13 @@ public class ArtistController {
         System.out.println("\n--- Manage Podcasts ---");
         System.out.println("1. Create Podcast");
         System.out.println("2. Add Episode to Podcast");
-        System.out.println("3. Back");
+        System.out.println("0. Back");
         int subChoice = Integer.parseInt(scanner.nextLine());
 
         if (subChoice == 1) {
             System.out.print("Podcast Title: ");
             String title = scanner.nextLine();
-            System.out.print("Host Name: "); // Could auto-fill stage name?
+            System.out.print("Host Name: ");
             String host = scanner.nextLine();
             System.out.print("Category: ");
             String cat = scanner.nextLine();
@@ -194,6 +194,7 @@ public class ArtistController {
                 System.out.println("ID: " + s.getSongId() +
                         " | Title: " + s.getTitle() +
                         " | Genre: " + s.getGenreName() +
+                        " | Plays: " + s.getPlayCount() +
                         " | URL: " + s.getFileUrl());
             }
         }
@@ -201,9 +202,14 @@ public class ArtistController {
 
     private static void viewMyAlbums(ArtistAccount artist) {
         List<Album> albums = albumService.getArtistAlbums(artist.getArtistId());
-        for (Album a : albums) {
-            System.out
-                    .println("ID: " + a.getAlbumId() + " | Title: " + a.getTitle() + " | Desc: " + a.getDescription());
+        if (albums.isEmpty()) {
+            System.out.println("No albums found.");
+        } else {
+            System.out.println("\n--- My Albums ---");
+            for (Album a : albums) {
+                System.out.println(
+                        "ID: " + a.getAlbumId() + " | Title: " + a.getTitle() + " | Desc: " + a.getDescription());
+            }
         }
     }
 }

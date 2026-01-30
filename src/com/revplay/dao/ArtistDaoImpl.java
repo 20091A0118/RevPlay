@@ -78,17 +78,18 @@ public class ArtistDaoImpl implements IArtistDao {
 
     @Override
     public boolean updateArtistProfile(ArtistAccount artist) {
-        String sql = "UPDATE ARTIST_ACCOUNT SET stage_name = ?, bio = ?, genre = ?, instagram_link = ?, youtube_link = ?, spotify_link = ? WHERE artist_id = ?";
+        String sql = "UPDATE ARTIST_ACCOUNT SET stage_name = ?, password_hash = ?, bio = ?, genre = ?, instagram_link = ?, youtube_link = ?, spotify_link = ? WHERE artist_id = ?";
         try (Connection conn = JDBCUtil.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, artist.getStageName());
-            ps.setString(2, artist.getBio());
-            ps.setString(3, artist.getGenre());
-            ps.setString(4, artist.getInstagramLink());
-            ps.setString(5, artist.getYoutubeLink());
-            ps.setString(6, artist.getSpotifyLink());
-            ps.setInt(7, artist.getArtistId());
+            ps.setString(2, artist.getPasswordHash());
+            ps.setString(3, artist.getBio());
+            ps.setString(4, artist.getGenre());
+            ps.setString(5, artist.getInstagramLink());
+            ps.setString(6, artist.getYoutubeLink());
+            ps.setString(7, artist.getSpotifyLink());
+            ps.setInt(8, artist.getArtistId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

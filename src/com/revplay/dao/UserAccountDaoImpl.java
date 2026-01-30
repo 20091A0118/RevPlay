@@ -38,7 +38,24 @@ public class UserAccountDaoImpl implements IUserAccountDao {
 
     @Override
     public boolean updateUserAccount(UserAccount user) {
-        return false;
+        String sql = "UPDATE USER_ACCOUNT SET full_name = ?, password_hash = ?, phone = ?, status = ?, security_question = ?, security_answer_hash = ?, password_hint = ? WHERE user_id = ?";
+        try (Connection con = JDBCUtil.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, user.getFullName());
+            ps.setString(2, user.getPasswordHash());
+            ps.setString(3, user.getPhone());
+            ps.setString(4, user.getStatus());
+            ps.setString(5, user.getSecurityQuestion());
+            ps.setString(6, user.getSecurityAnswerHash());
+            ps.setString(7, user.getPasswordHint());
+            ps.setInt(8, user.getUserId());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            com.revplay.util.LoggerUtil.logError("Error in updateUserAccount: " + e.getMessage(), e);
+            throw new com.revplay.exception.RevPlayException("Error updating user account", e);
+        }
     }
 
     @Override

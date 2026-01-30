@@ -58,9 +58,6 @@ public class Main {
                 com.revplay.util.LoggerUtil.logWarning("Invalid numeric input in main menu");
             } catch (com.revplay.exception.RevPlayException e) {
                 System.out.println("⚠️ An error occurred: " + e.getMessage());
-                // Exception is already logged in DAO, so we don't need to log stack trace again
-                // here,
-                // but we might want to log that it reached the UI.
                 com.revplay.util.LoggerUtil.logWarning("Handled UI exception: " + e.getMessage());
             } catch (Exception e) {
                 System.out.println("❌ An unexpected error occurred.");
@@ -70,21 +67,90 @@ public class Main {
     }
 
     private static void loginUser() {
-        System.out.print("Enter Email: ");
+        while (true) {
+            System.out.println("\n--- Listener Login ---");
+            System.out.println("1. Enter credentials");
+            System.out.println("2. Forgot Password");
+            System.out.println("0. Back");
+            System.out.print("Select option: ");
+
+            String opt = scanner.nextLine().trim();
+            if (opt.equals("0")) {
+                return;
+            } else if (opt.equals("2")) {
+                forgotPasswordUser();
+                continue;
+            } else if (!opt.equals("1")) {
+                System.out.println("Invalid option.");
+                continue;
+            }
+
+            System.out.print("Enter Email: ");
+            String email = scanner.nextLine();
+            System.out.print("Enter Password: ");
+            String password = scanner.nextLine();
+
+            UserAccount user = userService.getUserByEmail(email);
+            if (user != null && user.getPasswordHash().equals(password)) {
+                System.out.println("✅ Login Successful! Welcome " + user.getFullName());
+                UserController.userDashboard(user);
+                return;
+            } else {
+                System.out.println("❌ Invalid credentials.");
+            }
+        }
+    }
+
+    private static void forgotPasswordUser() {
+        System.out.println("\n--- Forgot Password ---");
+        System.out.print("Enter your registered Email: ");
         String email = scanner.nextLine();
-        System.out.print("Enter Password: ");
-        String password = scanner.nextLine();
 
         UserAccount user = userService.getUserByEmail(email);
-        if (user != null && user.getPasswordHash().equals(password)) {
-            System.out.println("Login Successful! Welcome " + user.getFullName());
-            UserController.userDashboard(user);
+        if (user == null) {
+            System.out.println("❌ No account found with this email.");
+            return;
+        }
+
+        // Show hint if available
+        if (user.getPasswordHint() != null && !user.getPasswordHint().isEmpty()) {
+            System.out.println("💡 Password Hint: " + user.getPasswordHint());
+        }
+
+        // Show security question
+        if (user.getSecurityQuestion() == null || user.getSecurityQuestion().isEmpty()) {
+            System.out.println("❌ No security question set for this account.");
+            return;
+        }
+
+        System.out.println("❓ Security Question: " + user.getSecurityQuestion());
+        System.out.print("Your Answer: ");
+        String answer = scanner.nextLine();
+
+        if (answer.equalsIgnoreCase(user.getSecurityAnswerHash())) {
+            System.out.println("✅ Answer verified!");
+            System.out.print("Enter New Password: ");
+            String newPass = scanner.nextLine();
+            System.out.print("Confirm New Password: ");
+            String confirmPass = scanner.nextLine();
+
+            if (newPass.equals(confirmPass)) {
+                user.setPasswordHash(newPass);
+                if (userService.updateUserAccount(user)) {
+                    System.out.println("✅ Password updated successfully! Please login with new password.");
+                } else {
+                    System.out.println("❌ Failed to update password.");
+                }
+            } else {
+                System.out.println("❌ Passwords do not match.");
+            }
         } else {
-            System.out.println("cnt login/Invalid credentials. Register first");
+            System.out.println("❌ Incorrect answer.");
         }
     }
 
     private static void loginArtist() {
+        System.out.println("\n--- Artist Login ---");
         System.out.print("Enter Email: ");
         String email = scanner.nextLine();
         System.out.print("Enter Password: ");
@@ -92,10 +158,10 @@ public class Main {
 
         ArtistAccount artist = artistService.getArtistByEmail(email);
         if (artist != null && artist.getPasswordHash().equals(password)) {
-            System.out.println("Login Successful! Welcome " + artist.getStageName());
+            System.out.println("✅ Login Successful! Welcome " + artist.getStageName());
             ArtistController.artistDashboard(artist);
         } else {
-            System.out.println("cnt login/Invalid credentials. Register first");
+            System.out.println("❌ Invalid credentials. Please register first.");
         }
     }
 
@@ -119,18 +185,18 @@ public class Main {
         UserAccount user = new UserAccount();
         user.setFullName(name);
         user.setEmail(email);
-        user.setPasswordHash(pass); // Plaintext for demo, should be hashed
+        user.setPasswordHash(pass);
         user.setPhone(phone);
         user.setStatus("ACTIVE");
         user.setSecurityQuestion(secQ);
-        user.setSecurityAnswerHash(secA); // Plaintext for now
+        user.setSecurityAnswerHash(secA);
         user.setPasswordHint(hint);
         user.setCreatedAt(LocalDateTime.now());
 
         if (userService.addUserAccount(user)) {
-            System.out.println("Registration successful!");
+            System.out.println("✅ Registration successful!");
         } else {
-            System.out.println("Registration failed. Email might strictly exist.");
+            System.out.println("❌ Registration failed. Email might already exist.");
         }
     }
 
@@ -166,9 +232,9 @@ public class Main {
         artist.setCreatedAt(LocalDateTime.now());
 
         if (artistService.registerArtist(artist)) {
-            System.out.println("Registration successful!");
+            System.out.println("✅ Registration successful!");
         } else {
-            System.out.println("Registration failed.");
+            System.out.println("❌ Registration failed.");
         }
     }
 }

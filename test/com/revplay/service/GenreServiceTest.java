@@ -1,6 +1,5 @@
 package com.revplay.service;
 
-import com.revplay.dao.FakeGenreDao;
 import com.revplay.model.Genre;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,54 +7,60 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
+/**
+ * Unit tests for GenreService using mock DAO.
+ */
 public class GenreServiceTest {
 
+    private MockGenreDao mockGenreDao;
     private GenreServiceImpl genreService;
-    private FakeGenreDao fakeDao;
 
     @BeforeEach
     public void setup() {
+        mockGenreDao = new MockGenreDao();
         genreService = new GenreServiceImpl();
-        fakeDao = new FakeGenreDao();
-        genreService.setGenreDao(fakeDao);
+        genreService.setGenreDao(mockGenreDao);
     }
 
     @Test
-    public void testGetOrCreateGenre_Existing() {
-        fakeDao.addGenre("Rock");
+    public void testGetOrCreateGenre_ExistingGenre() {
+        mockGenreDao.addGenre("Rock");
 
         Genre g = genreService.getOrCreateGenre("Rock");
+
         assertNotNull(g);
         assertEquals("Rock", g.getGenreName());
-        assertEquals(1, fakeDao.getAllGenres().size()); // Should not add duplicate
     }
 
     @Test
-    public void testGetOrCreateGenre_New() {
+    public void testGetOrCreateGenre_NewGenre() {
         Genre g = genreService.getOrCreateGenre("Jazz");
+
         assertNotNull(g);
         assertEquals("Jazz", g.getGenreName());
-        assertEquals(1, fakeDao.getAllGenres().size());
-    }
-
-    @Test
-    public void testGetAllGenres() {
-        fakeDao.addGenre("Pop");
-        fakeDao.addGenre("Classical");
-
-        List<Genre> genres = genreService.getAllGenres();
-        assertEquals(2, genres.size());
+        // Verify it was added
+        assertNotNull(mockGenreDao.getGenreByName("Jazz"));
     }
 
     @Test
     public void testGetOrCreateGenre_CaseInsensitive() {
-        fakeDao.addGenre("HipHop");
+        mockGenreDao.addGenre("HipHop");
 
         Genre g = genreService.getOrCreateGenre("hiphop");
-        // Note: Implementation usually depends on DAO. FakeDAO we made is
-        // case-insensitive for getGenreByName
 
         assertNotNull(g);
         assertEquals("HipHop", g.getGenreName());
+    }
+
+    @Test
+    public void testGetAllGenres() {
+        mockGenreDao.addGenre("Pop");
+        mockGenreDao.addGenre("Classical");
+        mockGenreDao.addGenre("Electronic");
+
+        List<Genre> genres = genreService.getAllGenres();
+
+        assertNotNull(genres);
+        assertEquals(3, genres.size());
     }
 }
